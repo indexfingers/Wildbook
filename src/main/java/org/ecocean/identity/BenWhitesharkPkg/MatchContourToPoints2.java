@@ -53,65 +53,46 @@ public class MatchContourToPoints2 {
 	// relevant getters and setters
 	
 	public void setDetectionIsBad(int val){
-		regions.detectionIsBad=val;
+		regions.detectionbad=val;
 	}
 	
 	public int getDetectionIsBad(){
-		return regions.detectionIsBad;
+		return regions.detectionbad;
 	}
 
-	public void setTipPt(double x, double y) {
-		regions.tipx = x;
-		regions.tipy = y;
+	public void setTipPt(double[] pt) {
+		regions.tippointyx = pt;
 	}
 
-	public void setLePt(double x, double y) {
-		regions.lex = x;
-		regions.ley = y;
+	public void setLePt(double[] pt) {
+		regions.leadingpointyx=pt;
 	}
 
-	public void setTePt(double x, double y) {
-		regions.tex = x;
-		regions.tey = y;
+	public void setTePt(double[] pt) {
+		regions.trailingpointyx=pt;
 	}
 
-	public double getTipPt(String dim) {
-		if (dim.equals("x")) {
-			return regions.tipx;
-		} else {
-			return regions.tipy;
-		}
+	public double[] getTipPt() {
+		return regions.tippointyx;
 	}
 
-	public double getTePt(String dim) {
-		if (dim.equals("x")) {
-			return regions.tex;
-		} else {
-			return regions.tey;
-		}
+	public double[] getTePt() {
+		return regions.trailingpointyx;
 	}
 
-	public double getLePt(String dim) {
-		if (dim.equals("x")) {
-			return regions.lex;
-		} else {
-			return regions.ley;
-		}
+	public double[] getLePt() {
+		return regions.leadingpointyx;
 	}
 
-	public int getSz(String dim) {
-		if (dim.equals("x")) {
-			return regions.szx;
-		} else {
-			return regions.szy;
-		}
+	public int[] getSz() {
+		return regions.imsizeyx;
 	}
 
 	public double[] getFinDetectionContour(String dim) {
 		if (dim.equals("x")) {
-			return regions.detectionx;
+			return regions.detectedfincontourx;
 		} else {
-			return regions.detectiony;
+			return regions.detectedfincontoury;
 		}
 	}
 
@@ -141,11 +122,13 @@ public class MatchContourToPoints2 {
 			content = sb.toString();
 			Gson gson = new Gson();
 			regions = gson.fromJson(content, FinDetectObjects.Regions.class);
+			
+			System.out.println(regions.tippointyx);
 				
 			dealWithNullPts();
 
-			this.selectedRegx = regions.regionsx.get(regions.selectedRegion);
-			this.selectedRegy = regions.regionsy.get(regions.selectedRegion);
+			this.selectedRegx = regions.closedregionboundariesx.get(regions.selectedregion);
+			this.selectedRegy = regions.closedregionboundariesy.get(regions.selectedregion);
 			success = "success";
 
 		} catch (IOException e) {
@@ -169,7 +152,7 @@ public class MatchContourToPoints2 {
 	public void exportJson() {
 		//take the time of export as the dateModified time: want latest possible time...
 		Date dateNow = new Date();
-		this.regions.date=dateNow.getTime();
+		this.regions.datedetectionmodified=dateNow.getTime();
 
 		
 		String jsonInString = convertRegionsToJsonString();
@@ -185,10 +168,10 @@ public class MatchContourToPoints2 {
 	}
 
 	private void dealWithNullPts() {
-		if ((regions.tipx + regions.tipy + regions.lex + regions.ley) == 0) {
-			regions.tipx = -1;regions.tipy = -1;
-			regions.tex = -1;regions.tey = -1;
-			regions.lex = -1;regions.ley = -1;
+		if(regions.tippointyx==null){
+			regions.tippointyx = new double[] {-1,-1};		
+			regions.trailingpointyx = new double[] {-1,-1};
+			regions.leadingpointyx = new double[] {-1,-1};
 		}
 	}
 
@@ -204,11 +187,11 @@ public class MatchContourToPoints2 {
 		String rtn;
 		double[] dists;
 		double maxDist = 0;
-		double[] maxDists = new double[regions.regionsx.size()];
+		double[] maxDists = new double[regions.closedregionboundariesx.size()];
 		int[] closestTip, closestLe, closestTe;
-		closestTip = new int[regions.regionsx.size()];
-		closestLe = new int[regions.regionsx.size()];
-		closestTe = new int[regions.regionsx.size()];
+		closestTip = new int[regions.closedregionboundariesx.size()];
+		closestLe = new int[regions.closedregionboundariesx.size()];
+		closestTe = new int[regions.closedregionboundariesx.size()];
 		MinIdx minIdxTip, minIdxLe, minIdxTe, minIdxReg;
 		
 		
@@ -218,22 +201,22 @@ public class MatchContourToPoints2 {
 		//Step 1: C* = min_c max_p dist(Reg_c,keypoint_p)
 		//Find region that minimises the maximum distance you'd have to travel to from any keypoint to that region
 		try {
-			for (int j = 0; j < regions.regionsx.size(); j++) {
+			for (int j = 0; j < regions.closedregionboundariesx.size(); j++) {
 
-				dists = distsPtToContour(regions.tipx, regions.tipy, regions.regionsx.get(j), regions.regionsy.get(j));
+				dists = distsPtToContour(regions.tippointyx[1], regions.tippointyx[0], regions.closedregionboundariesx.get(j), regions.closedregionboundariesy.get(j));
 				minIdxTip = getMinIdx(dists);
 				closestTip[j] = minIdxTip.idx;
 				if (minIdxTip.min > maxDist)
 					maxDist = minIdxTip.min;
 
-				dists = distsPtToContour(regions.lex, regions.ley, regions.regionsx.get(j), regions.regionsy.get(j));
+				dists = distsPtToContour(regions.leadingpointyx[1], regions.leadingpointyx[0], regions.closedregionboundariesx.get(j), regions.closedregionboundariesy.get(j));
 				minIdxLe = getMinIdx(dists);
 				//System.out.println(minIdxLe.idx + "  " + minIdxLe.min);
 				closestLe[j] = minIdxLe.idx;
 				if (minIdxLe.min > maxDist)
 					maxDist = minIdxLe.min;
 
-				dists = distsPtToContour(regions.tex, regions.tey, regions.regionsx.get(j), regions.regionsy.get(j));
+				dists = distsPtToContour(regions.trailingpointyx[1], regions.trailingpointyx[0], regions.closedregionboundariesx.get(j), regions.closedregionboundariesy.get(j));
 				minIdxTe = getMinIdx(dists);
 				//System.out.println(minIdxTe.idx + "  " + minIdxTe.min);
 				closestTe[j] = minIdxTe.idx;
@@ -243,7 +226,7 @@ public class MatchContourToPoints2 {
 			}
 
 			minIdxReg = getMinIdx(maxDists);
-			regions.selectedRegion=minIdxReg.idx;
+			regions.selectedregion=minIdxReg.idx;
 
 
 			
@@ -262,35 +245,35 @@ public class MatchContourToPoints2 {
 
 			// System.out.println("smmIdx: " + smallIdx + "bigIdx: " + bigIdx);
 
-			bigx = concatDbl(regions.regionsx.get(minIdxReg.idx), regions.regionsx.get(minIdxReg.idx));
-			bigy = concatDbl(regions.regionsy.get(minIdxReg.idx), regions.regionsy.get(minIdxReg.idx));
+			bigx = concatDbl(regions.closedregionboundariesx.get(minIdxReg.idx), regions.closedregionboundariesx.get(minIdxReg.idx));
+			bigy = concatDbl(regions.closedregionboundariesy.get(minIdxReg.idx), regions.closedregionboundariesy.get(minIdxReg.idx));
 
 			sec1x = Arrays.copyOfRange(bigx, smallIdx, bigIdx);
 			sec1y = Arrays.copyOfRange(bigy, smallIdx, bigIdx);
 
-			sec2x = Arrays.copyOfRange(bigx, bigIdx, regions.regionsx.get(minIdxReg.idx).length + bigIdx - sec1x.length);
-			sec2y = Arrays.copyOfRange(bigy, bigIdx, regions.regionsx.get(minIdxReg.idx).length + bigIdx - sec1x.length);
+			sec2x = Arrays.copyOfRange(bigx, bigIdx, regions.closedregionboundariesx.get(minIdxReg.idx).length + bigIdx - sec1x.length);
+			sec2y = Arrays.copyOfRange(bigy, bigIdx, regions.closedregionboundariesx.get(minIdxReg.idx).length + bigIdx - sec1x.length);
 
 			// System.out.println("len big: " + bigx.length + "len sec 1: " +
 			// sec1x.length + "len sec 2: " + sec2x.length);
 
 			MinIdx minIdx1, minIdx2;
 
-			dists = distsPtToContour(regions.tipx, regions.tipy, sec1x, sec1y);
+			dists = distsPtToContour(regions.tippointyx[1], regions.tippointyx[0], sec1x, sec1y);
 			minIdx1 = getMinIdx(dists);
-			dists = distsPtToContour(regions.tipx, regions.tipy, sec2x, sec2y);
+			dists = distsPtToContour(regions.tippointyx[1], regions.tippointyx[1], sec2x, sec2y);
 			minIdx2 = getMinIdx(dists);
 
 			if (minIdx1.min < minIdx2.min) {
-				regions.detectionx = sec1x;
-				regions.detectiony = sec1y;
+				regions.detectedfincontourx = sec1x;
+				regions.detectedfincontoury = sec1y;
 			} else {
-				regions.detectionx = sec2x;
-				regions.detectiony = sec2y;
+				regions.detectedfincontourx = sec2x;
+				regions.detectedfincontoury = sec2y;
 			}
 
-			this.selectedRegx = regions.regionsx.get(minIdxReg.idx);
-			this.selectedRegy = regions.regionsy.get(minIdxReg.idx);
+			this.selectedRegx = regions.closedregionboundariesx.get(minIdxReg.idx);
+			this.selectedRegy = regions.closedregionboundariesy.get(minIdxReg.idx);
 
 			rtn = "success";
 		} catch (Exception e) {
@@ -345,19 +328,19 @@ public class MatchContourToPoints2 {
 	}
 
 	public void setDetection(double[] x, double[] y) {
-		regions.detectionx = x;
-		regions.detectiony = y;
+		regions.detectedfincontourx = x;
+		regions.detectedfincontoury = y;
 	}
 
 	public void setRegionWithIndex(int idx) {
-		this.selectedRegx = regions.regionsx.get(idx);
-		this.selectedRegy = regions.regionsy.get(idx);
+		this.selectedRegx = regions.closedregionboundariesx.get(idx);
+		this.selectedRegy = regions.closedregionboundariesy.get(idx);
 	}
 
 	public void addRegion(double[] x, double[] y) {
 		System.out.println("received contour of length " + x.length);
-		regions.regionsx.add(x);
-		regions.regionsy.add(y);
+		regions.closedregionboundariesx.add(x);
+		regions.closedregionboundariesy.add(y);
 	}
 
 	public double[] getContour(String str) {
@@ -387,13 +370,14 @@ class MinIdx {
 
 class FinDetectObjects {
 	static class Regions {
-		int szx, szy;
-		long date;
-		double tipx, tipy, lex, ley, tex, tey;
-		int ismanual, selectedRegion;
-		double[] detectionx, detectiony;
-		List<double[]> regionsx, regionsy;
-		int detectionIsBad;
-
+		int[] imsizeyx;
+		String fininstancequality;
+		long datedetectionmodified;
+		int detectionbad;
+		double[] tippointyx, leadingpointyx, trailingpointyx;
+		int ismanual, selectedregion;
+		List<double[]> closedregionboundariesy, closedregionboundariesx;
+		double[] detectedfincontoury, detectedfincontourx, autofincontoury,autofincontourx;
 	}
 }
+
