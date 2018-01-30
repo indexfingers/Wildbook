@@ -108,8 +108,11 @@ public class S3AssetStore extends AssetStore {
         if (s3Client != null) return s3Client;
         if ((config.getString("AWSAccessKeyId") != null) && (config.getString("AWSSecretAccessKey") != null)) {
             s3Client = new AmazonS3Client(new BasicAWSCredentials(config.getString("AWSAccessKeyId"), config.getString("AWSSecretAccessKey")));
-        } else {  //we try the default credentials file
-            s3Client = new AmazonS3Client(new ProfileCredentialsProvider());
+        } else {  //we try the default credentials file BH Changed to use default credential provider chain
+                  // as part of chain, calls ProfileCredentialsProvider(), but if this fails, tries instance
+                  //profile credentials given by role assigned to instance.
+            //s3Client = new AmazonS3Client(new ProfileCredentialsProvider());
+            s3Client = new AmazonS3Client();
         }
         return s3Client;
     }
@@ -279,5 +282,3 @@ System.out.println("S3AssetStore.copyAsset(): " + fromB.toString() + "|" + fromK
 
 
 }
-
-
