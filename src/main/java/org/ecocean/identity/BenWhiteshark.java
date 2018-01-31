@@ -163,7 +163,7 @@ count++;  System.out.println(count + "/" + targetMAs.size() + ": " + ma.getId())
 	//}
 
   //BH: now making 'filePathString' a url - should work with S3 or LocalAssetStore
-  String filePathString = ma.webURLString();
+        String filePathString = ma.webURLString();
 
         String jd = ma.getUUID() + "\t" + filePathString + "\t" + (enc.hasMarkedIndividual() ? enc.getIndividualID() : "-1") + "\t" + enc.getCatalogNumber() +
                     "\t-1\t-1\t-1\t-1\n";    // this is holding the place of the potential two fin end points x1,y1 x2,y2 (via user input)
