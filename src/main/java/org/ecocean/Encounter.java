@@ -118,6 +118,11 @@ public class Encounter implements java.io.Serializable {
   public String lifeStage;
   public String country;
 
+  //BH: adding 'alternateCatalogNumber' which is actual alternate catalog number as opposed to alternate individual id...
+  private String alternateCatalogNumber;
+
+
+
     private static HashMap<String,ArrayList<Encounter>> _matchEncounterCache = new HashMap<String,ArrayList<Encounter>>();
 
   /*
@@ -1502,6 +1507,17 @@ System.out.println("did not find MediaAsset for params=" + sp + "; creating one?
       return null;
     }
     return otherCatalogNumbers;
+  }
+
+  public void setAlternateCatalogNumber(String newID) {
+    this.alternateCatalogNumber = newID;
+  }
+
+  public String getAlternateCatalogNumber() {
+    if (alternateCatalogNumber == null) {
+      return null;
+    }
+    return alternateCatalogNumber;
   }
 
   public String getInformOthers() {
