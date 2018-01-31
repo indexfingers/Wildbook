@@ -113,7 +113,8 @@
                 /individualSearchResults.jsp = authc
                 /individuals.jsp = authc
                 /encounters/** =  authc
-
+                /api/** = authcBasicWildbook, roles[rest]
+                /rest/** = authcBasicWildbook, roles[rest]
 
 
 			    /RelationshipCreate  = authc, roles[researcher]
