@@ -105,10 +105,14 @@
                 #and admin areas
                 [urls]
 
-				/DeleteAllDataPermanently = authc, roles[destroyer]
-				/appadmin/scanTaskAdmin.jsp = authc, roles[researcher]
-				/appadmin/** = authc, roles[admin]
-				 /logs/** = authc, roles[admin]
+                /DeleteAllDataPermanently = authc, roles[destroyer]
+                /appadmin/scanTaskAdmin.jsp = authc, roles[researcher]
+                /appadmin/** = authc, roles[admin]
+                /logs/** = authc, roles[admin]
+
+                /individualSearchResults.jsp = authc
+                /individuals.jsp = authc
+                /encounters/** =  authc
 
 
 
