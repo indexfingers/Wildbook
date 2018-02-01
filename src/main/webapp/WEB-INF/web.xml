@@ -601,11 +601,6 @@
   </servlet>
 
       <servlet>
-        <servlet-name>EncounterSetAlternateCatalogNumber</servlet-name>
-        <servlet-class>org.ecocean.servlet.EncounterSetAlternateCatalogNumber</servlet-class>
-      </servlet>
-
-      <servlet>
         <servlet-name>TissueSampleRemoveSexAnalysis</servlet-name>
         <servlet-class>org.ecocean.servlet.TissueSampleRemoveSexAnalysis</servlet-class>
   </servlet>
@@ -1779,11 +1774,6 @@
   <servlet-mapping>
     <servlet-name>EncounterSetAlternateID</servlet-name>
     <url-pattern>/EncounterSetAlternateID</url-pattern>
-  </servlet-mapping>
-
-  <servlet-mapping>
-    <servlet-name>EncounterSetAlternateCatalogNumber</servlet-name>
-    <url-pattern>/EncounterSetAlternateCatalogNumber</url-pattern>
   </servlet-mapping>
 
     <servlet-mapping>
