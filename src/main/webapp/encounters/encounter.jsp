@@ -2746,10 +2746,12 @@ $("a#comments").click(function() {
                  if(enc.getAlternateCatalogNumber()!=null){altEncID = enc.getAlternateCatalogNumber();}
                  %>
 
-                <!-- IF WE JUST WANT TO DISPLAY NUMBER
-                <p class = "para">
-                  Alternate Number: <%=altEncId%>
-                </p> -->
+                <%
+                //<!-- IF WE JUST WANT TO DISPLAY NUMBER -->
+                //<p class = "para">
+                  //Alternate Number: <%=altEncId%>
+                //</p> 
+                %>
 
                 <p class="para">
                    Alternate Number: <%=altEncID%>
