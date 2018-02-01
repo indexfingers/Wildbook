@@ -2746,12 +2746,6 @@ $("a#comments").click(function() {
                  if(enc.getAlternateCatalogNumber()!=null){altEncID = enc.getAlternateCatalogNumber();}
                  %>
 
-                <%
-                //<!-- IF WE JUST WANT TO DISPLAY NUMBER -->
-                //<p class = "para">
-                  //Alternate Number: <%=altEncId%>
-                //</p> 
-                %>
 
                 <p class="para">
                    Alternate Number: <%=altEncID%>
@@ -2802,74 +2796,73 @@ $("a#comments").click(function() {
 
 
 
-								<!-- START WORKFLOW ATTRIBUTE -->
+              <!-- START WORKFLOW ATTRIBUTE -->
+
 
                 <%
-									String state="";
-									if (enc.getState()!=null){state=enc.getState();}
-									%>
-									<p class="para">
-										 <%=encprops.getProperty("workflowState") %> <%=state %>
+                String state="";
+                if (enc.getState()!=null){state=enc.getState();}
+                %>
+                <p class="para">
+                   <%=encprops.getProperty("workflowState") %> <%=state %>
 
-										<%
-										if (isOwner && CommonConfiguration.isCatalogEditable(context)) {
-										%>
-										<a id="state" class="launchPopup"><img align="absmiddle" width="20px" height="20px" style="border-style: none;" src="../images/Crystal_Clear_action_edit.png" /></a>
-										<%
-										}
-										%>
+                  <%
+                  if (isOwner && CommonConfiguration.isCatalogEditable(context)) {
+                  %>
+                  <a id="state" class="launchPopup"><img align="absmiddle" width="20px" height="20px" style="border-style: none;" src="../images/Crystal_Clear_action_edit.png" /></a>
+                  <%
+                  }
+                  %>
 
-									</p>
-									<%
-										if (isOwner && CommonConfiguration.isCatalogEditable(context)) {
-									%>
-   									<div id="dialogState" title="<%=encprops.getProperty("setWorkflowState")%>" style="display:none">
-  										<table class="popupForm">
-						  					<tr>
-						    					<td align="left" valign="top">
-						      						<form name="countryForm" action="../EncounterSetState" method="post">
-						            					<select name="state" id="state">
-															<%
-						       								boolean hasMoreStates=true;
-						       								int taxNum=0;
-						       								while(hasMoreStates){
-						       	  								String currentLifeState = "encounterState"+taxNum;
-						       	  								if(CommonConfiguration.getProperty(currentLifeState,context)!=null){
-						       	  									%>
-						       	  	  								<option value="<%=CommonConfiguration.getProperty(currentLifeState,context)%>"><%=CommonConfiguration.getProperty(currentLifeState,context)%></option>
-						       	  									<%
-						       										taxNum++;
-						          								}
-						          								else{
-						             								hasMoreStates=false;
-						          								}
-
-						       								} //end while
-						       								%>
-						      						</select>
-						      						<input name="number" type="hidden" value="<%=num%>" id="number" />
-						        					<input name="<%=encprops.getProperty("set")%>" type="submit" id="<%=encprops.getProperty("set")%>" value="<%=encprops.getProperty("set")%>" />
-						      					</form>
-						    				</td>
-						  				</tr>
-									</table>
-  								</div>
-								<script>
-  									var dlgState = $("#dialogState").dialog({
-    									autoOpen: false,
-    									draggable: false,
-    									resizable: false,
-    									width: 600
-  									});
-
-  									$("a#state").click(function() {
-    									dlgState.dialog("open");
-  									});
-  								</script>
-       							<%
-        						}
-      							%>
-								<!-- END WORKFLOW ATTRIBUTE -->
+                </p>
+                <%
+                  if (isOwner && CommonConfiguration.isCatalogEditable(context)) {
+                %>
+                  <div id="dialogState" title="<%=encprops.getProperty("setWorkflowState")%>" style="display:none">
+                    <table class="popupForm">
+                      <tr>
+                        <td align="left" valign="top">
+                            <form name="countryForm" action="../EncounterSetState" method="post">
+                                <select name="state" id="state">
+                            <%
+                                boolean hasMoreStates=true;
+                                int taxNum=0;
+                                while(hasMoreStates){
+                                    String currentLifeState = "encounterState"+taxNum;
+                                    if(CommonConfiguration.getProperty(currentLifeState,context)!=null){
+                                      %>
+                                        <option value="<%=CommonConfiguration.getProperty(currentLifeState,context)%>"><%=CommonConfiguration.getProperty(currentLifeState,context)%></option>
+                                      <%
+                                    taxNum++;
+                                    }
+                                    else{
+                                      hasMoreStates=false;
+                                    }
+                                } //end while
+                                %>
+                            </select>
+                            <input name="number" type="hidden" value="<%=num%>" id="number" />
+                            <input name="<%=encprops.getProperty("set")%>" type="submit" id="<%=encprops.getProperty("set")%>" value="<%=encprops.getProperty("set")%>" />
+                          </form>
+                      </td>
+                    </tr>
+                </table>
+                </div>
+                <script>
+                  var dlgState = $("#dialogState").dialog({
+                    autoOpen: false,
+                    draggable: false,
+                    resizable: false,
+                    width: 600
+                  });
+                  $("a#state").click(function() {
+                    dlgState.dialog("open");
+                  });
+                </script>
+                  <%
+                  }
+                  %>
+                <!-- END WORKFLOW ATTRIBUTE -->
 
 
 								<!-- START USER ATTRIBUTE -->
