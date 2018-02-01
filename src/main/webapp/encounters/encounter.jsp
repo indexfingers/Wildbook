@@ -2743,7 +2743,7 @@ $("a#comments").click(function() {
 
                 <!-- START ALTERNATE ENCOUNTER ID ATTRIBUTE -->
                  <% String altEncID = "";
-                 if(enc.getAlternateCatalogNumber()!=null){altEncId = enc.getAlternateCatalogNumber();}
+                 if(enc.getAlternateCatalogNumber()!=null){altEncID = enc.getAlternateCatalogNumber();}
                  %>
 
                 <!-- IF WE JUST WANT TO DISPLAY NUMBER
