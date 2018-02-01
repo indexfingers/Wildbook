@@ -2756,7 +2756,7 @@ $("a#comments").click(function() {
                   <%
                   if (isOwner && CommonConfiguration.isCatalogEditable(context)) {
                   %>
-                  <a id="state" class="launchPopup"><img align="absmiddle" width="20px" height="20px" style="border-style: none;" src="../images/Crystal_Clear_action_edit.png" /></a>
+                  <a id="altEncID" class="launchPopup"><img align="absmiddle" width="20px" height="20px" style="border-style: none;" src="../images/Crystal_Clear_action_edit.png" /></a>
                   <%
                   }
                   %>
