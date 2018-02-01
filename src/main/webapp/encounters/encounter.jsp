@@ -2770,7 +2770,7 @@ $("a#comments").click(function() {
                 <table border="1" cellpadding="1" cellspacing="0" bordercolor="#FFFFFF">
                     <tr>
                       <td align="left" valign="top">
-                        <form name="setAltEncId" action="../EncounterSetAlternateCatalogNumber" method="post">
+                        <form name="setAltEncID" action="../EncounterSetAlternateCatalogNumber" method="post">
                               <input name="alternateencid" type="text" size="10" maxlength="50" />
                                                    <input name="encounter" type="hidden" value="<%=num%>" />
                           <input name="Set" type="submit" id="<%=encprops.getProperty("set")%>" value="<%=encprops.getProperty("set")%>" />
