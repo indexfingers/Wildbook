@@ -2742,9 +2742,9 @@ $("a#comments").click(function() {
 								</p>
 
                 <!-- START ALTERNATE ENCOUNTER ID ATTRIBUTE -->
-                 <% String altEncID = "";
-                 if(enc.getAlternateCatalogNumber()!=null){altEncId = enc.getAlternateCatalogNumber();}
-                 %>
+                 <% String altEncId = "";
+                 if(enc.getAlternateCatalogNumber()!=null)
+                    altEncId = enc.getAlternateCatalogNumber();%>
 
                 <!-- IF WE JUST WANT TO DISPLAY NUMBER
                 <p class = "para">
@@ -2752,7 +2752,7 @@ $("a#comments").click(function() {
                 </p> -->
 
                 <p class="para">
-                   Alternate Number: <%=altEncID%>
+                   Alternate Number: <%=altEncId%>
                   <%
                   if (isOwner && CommonConfiguration.isCatalogEditable(context)) {
                   %>
@@ -2766,7 +2766,7 @@ $("a#comments").click(function() {
                   if (isOwner && CommonConfiguration.isCatalogEditable(context)) {
                 %>
                 <!-- start set alternate ID popup -->
-                <div id="dialogAltEncID" title="<%=encprops.getProperty("setAlternateCatalogNumber")%>" style="display:none">
+                <div id="dialogAlternateEncID" title="<%=encprops.getProperty("setAlternateCatalogNumber")%>" style="display:none">
                 <table border="1" cellpadding="1" cellspacing="0" bordercolor="#FFFFFF">
                     <tr>
                       <td align="left" valign="top">
@@ -2781,15 +2781,15 @@ $("a#comments").click(function() {
                 </div>
                                          		<!-- popup dialog script -->
                 <script>
-                var dlgAltEncID = $("#dialogAltEncID").dialog({
+                var dlgAlternateEncID = $("#dialogAlternateEncID").dialog({
                   autoOpen: false,
                   draggable: false,
                   resizable: false,
                   width: 600
                 });
 
-                $("a#altEncID").click(function() {
-                  dlgAltEncID.dialog("open");
+                $("a#altEncId").click(function() {
+                  dlgAlternateEncID.dialog("open");
                 });
                 </script>
                 <%
