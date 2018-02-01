@@ -2740,69 +2740,11 @@ $("a#comments").click(function() {
 								<p class="para">
 									Number: <%=num%>
 								</p>
-
-                <!-- START ALTERNATE ENCOUNTER ID ATTRIBUTE -->
-                 <% String altEncId = "";
-                 if(enc.getAlternateCatalogNumber()!=null)
-                    altEncId = enc.getAlternateCatalogNumber();%>
-
-                <!-- IF WE JUST WANT TO DISPLAY NUMBER
-                <p class = "para">
-                  Alternate Number: <%=altEncId%>
-                </p> -->
-
-                <p class="para">
-                   Alternate Number: <%=altEncId%>
-                  <%
-                  if (isOwner && CommonConfiguration.isCatalogEditable(context)) {
-                  %>
-                  <a id="state" class="launchPopup"><img align="absmiddle" width="20px" height="20px" style="border-style: none;" src="../images/Crystal_Clear_action_edit.png" /></a>
-                  <%
-                  }
-                  %>
-                </p>
-
-                <%
-                  if (isOwner && CommonConfiguration.isCatalogEditable(context)) {
-                %>
-                <!-- start set alternate ID popup -->
-                <div id="dialogAlternateEncID" title="<%=encprops.getProperty("setAlternateCatalogNumber")%>" style="display:none">
-                <table border="1" cellpadding="1" cellspacing="0" bordercolor="#FFFFFF">
-                    <tr>
-                      <td align="left" valign="top">
-                        <form name="setAltEncId" action="../EncounterSetAlternateCatalogNumber" method="post">
-                              <input name="alternateencid" type="text" size="10" maxlength="50" />
-                                                   <input name="encounter" type="hidden" value="<%=num%>" />
-                          <input name="Set" type="submit" id="<%=encprops.getProperty("set")%>" value="<%=encprops.getProperty("set")%>" />
-                          </form>
-                      </td>
-                    </tr>
-                  </table>
-                </div>
-                                         		<!-- popup dialog script -->
-                <script>
-                var dlgAlternateEncID = $("#dialogAlternateEncID").dialog({
-                  autoOpen: false,
-                  draggable: false,
-                  resizable: false,
-                  width: 600
-                });
-
-                $("a#altEncId").click(function() {
-                  dlgAlternateEncID.dialog("open");
-                });
-                </script>
-                <%
-                }
-                %>
-
-              <!-- END ALTERNATE ENCOUNTER / CATALOG NUMBER ATTRIBUTE -->
-
-
-
 								<!-- START WORKFLOW ATTRIBUTE -->
 
-                <%
+
+ 								<%
+
 									String state="";
 									if (enc.getState()!=null){state=enc.getState();}
 									%>
