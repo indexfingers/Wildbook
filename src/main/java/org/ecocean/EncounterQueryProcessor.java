@@ -917,9 +917,9 @@ public class EncounterQueryProcessor {
 	      String altEncIDFilter="( alternateCatalogNumber == \""+nameString+"\" )";
 
 
-	      if(filter.equals(SELECT_FROM_ORG_ECOCEAN_ENCOUNTER_WHERE)){filter+=+locIDFilter;}
+	      if(filter.equals(SELECT_FROM_ORG_ECOCEAN_ENCOUNTER_WHERE)){filter+=locIDFilter;}
           else{
-            filter+=" && "+locIDFilter;
+            filter+=" && " + altEncIDFilter;
           }
 
 	      prettyPrint.append("Alternate catalog number is: \""+nameString+"\"<br />");
