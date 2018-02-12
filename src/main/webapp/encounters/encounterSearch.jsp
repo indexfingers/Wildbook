@@ -1526,12 +1526,12 @@ else {
 		</td>
         </tr>
 
-
+alternateEncIDHelp
 
 
         <tr>
       <td><br /><strong><%=encprops.getProperty("alternateEncID")%></strong>
-        <input name="altEncIDField" type="text" size="60"> <br>
+        <input name="altEncIDField" type="text" size="60"> <br> <em><%=encprops.getProperty("alternateEncIDHelp")%></em>
       </td>
     </tr>
 
