@@ -912,7 +912,8 @@ public class EncounterQueryProcessor {
 	    if((request.getParameter("altEncIDField")!=null)&&(!request.getParameter("altEncIDField").equals(""))) {
 
 	      //clean the input string to create its equivalent as if it had been submitted through the web form
-	      String nameString=ServletUtilities.cleanFileName(ServletUtilities.preventCrossSiteScriptingAttacks(request.getParameter("filenameField").trim()));
+        //String altID=request.getParameter("alternateIDField").replaceAll("%20", " ").trim();
+	      String nameString=ServletUtilities.cleanFileName(ServletUtilities.preventCrossSiteScriptingAttacks(request.getParameter("altEncIDField").trim()));
 
 	      String altEncIDFilter="( alternateCatalogNumber == \""+nameString+"\" )";
 
