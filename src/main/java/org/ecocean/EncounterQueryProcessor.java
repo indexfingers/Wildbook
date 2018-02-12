@@ -917,7 +917,7 @@ public class EncounterQueryProcessor {
 	      String altEncIDFilter="( alternateCatalogNumber == \""+nameString+"\" )";
 
 
-	      if(filter.equals(SELECT_FROM_ORG_ECOCEAN_ENCOUNTER_WHERE)){filter+=locIDFilter;}
+	      if(filter.equals(SELECT_FROM_ORG_ECOCEAN_ENCOUNTER_WHERE)){filter+=altEncIDFilter;}
           else{
             filter+=" && " + altEncIDFilter;
           }
