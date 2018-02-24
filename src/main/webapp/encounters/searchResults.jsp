@@ -24,7 +24,7 @@ context=ServletUtilities.getContext(request);
   int numResults = 0;
 
 
-  Vector<Encounter> rEncounters = new Vector<Encounter>();
+  Vector rEncounters = new Vector();
 
   myShepherd.beginDBTransaction();
 
@@ -1215,7 +1215,7 @@ console.log(t);
 	  myShepherd.rollbackDBTransaction();
 	  myShepherd.closeDBTransaction();
   }
-  rEncounters = null;
+  //rEncounters = null;
 
 %>
 </div>
