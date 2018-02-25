@@ -303,6 +303,8 @@ td.measurement{
 
 
 
+
+
   <script>
             function initialize() {
             //alert("Initializing map!");
@@ -545,6 +547,11 @@ $(function() {
 
   });
   </script>
+
+  <script>
+    $("div.blockUI.blockOverlay").each(function(){this.style.setProperty('opacity',1.0,'important')});
+  </script>
+
 
    <script type="text/javascript">
   $(function() {
