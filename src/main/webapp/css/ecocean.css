@@ -50,7 +50,7 @@ h1 {
   line-height: 1.2em;
   margin-top: 0px;
   padding-top: 0px;
-  color: #FFFFFF;	
+  color: #FFFFFF;
   background-color: #0000FF;
 }
 
@@ -59,7 +59,7 @@ h1 {
   line-height: 1.2em;
   margin-top: 0px;
   padding-top: 0px;
-  color: #000000;	
+  color: #000000;
   background-color: #FFFFFF;
 }
 
@@ -234,7 +234,7 @@ a.launchPopup {
 img {
   padding: 0px;
   margin: 0px;
-  
+
 }
 
 #banner {
@@ -1125,11 +1125,11 @@ table.editEncounter {
  border-color: #000000;
  background-color: #CCCCCC;
 }
- 
+
 table.editEncounter .formLabel {
  text-align: left;
  font: bold;
-} 
+}
 /* ================================================================
 This copyright notice must be untouched at all times.
 
@@ -1528,7 +1528,7 @@ div.row-lock.blocked {
 }
 
 .blockUI.blockOverlay {
-	opacity: 0.65 !important;
+	opacity: 1.0 !important;
 }
 
 table.no-access,
@@ -1797,5 +1797,3 @@ div.state-approved span.state {
 .socialphoto.selected {
     background-color: greenyellow;
 }
-
-
