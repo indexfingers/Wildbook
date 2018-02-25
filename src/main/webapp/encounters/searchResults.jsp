@@ -3,7 +3,7 @@
 
 
 <%
-
+System.out.println("Hello from searchResults");
 String context="context0";
 context=ServletUtilities.getContext(request);
 
@@ -155,7 +155,7 @@ td.tdw:hover div {
   #tabmenu a, a.active {
     color: #000;
     background: #E6EEEE;
-     
+
     border: 1px solid #CDCDCD;
     padding: 2px 5px 0px 5px;
     margin: 0;
