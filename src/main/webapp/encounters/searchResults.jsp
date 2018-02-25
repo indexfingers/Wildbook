@@ -289,8 +289,6 @@ td.tdw:hover div {
 		JSONArray jsonobj = RESTUtils.getJSONArrayFromCollection((Collection)rEncounters, jdopm.getExecutionContext());
 		//JSONArray jsonobj = RESTUtils.getJSONArrayFromCollection((Collection)rEncounters, ((JDOPersistenceManager)pm).getExecutionContext());
 		encsJson = jsonobj.toString();
-		System.out.println("Length of jsonobj = " + jsonobj.length());
-		System.out.println("encsJson is: " + encsJson);
 //	} else {
 //		JSONObject jsonobj = RESTUtils.getJSONObjectFromPOJO(rEncounters, jdopm.getExecutionContext());
 //		encsJson = jsonobj.toString();
@@ -420,6 +418,11 @@ var sTable = false;
 
 var iaResults;
 function doTable() {
+	
+	for (var i = 0 ; i < searchResults.length ; i++) {
+		searchResults[i] = new wildbook.Model.Encounter(searchResults[i]);
+	}
+
 	iaResults = {};
 	if (needIAStatus) {
 		for (var i = 0 ; i < searchResults.length ; i++) {
@@ -457,11 +460,7 @@ function doTable() {
 			error: function(a,b,c) { console.warn('%o %o %o', a, b, c); alert('error finding IA results'); },
 		});
 	}
-/*
-	for (var i = 0 ; i < searchResults.length ; i++) {
-		searchResults[i] = new wildbook.Model.Encounter(searchResults[i]);
-	}
-*/
+
 
 	sTable = new SortTable({
 		data: searchResults,
