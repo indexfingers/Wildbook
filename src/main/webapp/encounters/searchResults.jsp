@@ -24,14 +24,16 @@ context=ServletUtilities.getContext(request);
   int numResults = 0;
 
 
-  //Vector rEncounters = new Vector();
+  Vector rEncounters = new Vector();
 
-  //myShepherd.beginDBTransaction();
+  myShepherd.beginDBTransaction();
 
   try{
 
-  	//EncounterQueryResult queryResult = EncounterQueryProcessor.processQuery(myShepherd, request, "year descending, month descending, day descending");
- 	 //rEncounters = queryResult.getResult();
+  	EncounterQueryResult queryResult = EncounterQueryProcessor.processQuery(myShepherd, request, "year descending, month descending, day descending");
+ 	rEncounters = queryResult.getResult();
+ 	System.out.println("Size of rEncounters = " + rEncounters.size());
+ 	
 
 
 //--let's estimate the number of results that might be unique
@@ -281,17 +283,19 @@ td.tdw:hover div {
 
 <%
 	String encsJson = "false";
-/*
+
 	JDOPersistenceManager jdopm = (JDOPersistenceManager)myShepherd.getPM();
-	if (rEncounters instanceof Collection) {
+//	if (rEncounters instanceof Collection) {
 		JSONArray jsonobj = RESTUtils.getJSONArrayFromCollection((Collection)rEncounters, jdopm.getExecutionContext());
 		//JSONArray jsonobj = RESTUtils.getJSONArrayFromCollection((Collection)rEncounters, ((JDOPersistenceManager)pm).getExecutionContext());
 		encsJson = jsonobj.toString();
-	} else {
-		JSONObject jsonobj = RESTUtils.getJSONObjectFromPOJO(rEncounters, jdopm.getExecutionContext());
-		encsJson = jsonobj.toString();
-	}
-*/
+		System.out.println("Length of jsonobj = " + jsonobj.length());
+		System.out.println("encsJson is: " + encsJson);
+//	} else {
+//		JSONObject jsonobj = RESTUtils.getJSONObjectFromPOJO(rEncounters, jdopm.getExecutionContext());
+//		encsJson = jsonobj.toString();
+//	}
+
 
 StringBuffer prettyPrint=new StringBuffer("");
 
@@ -304,6 +308,7 @@ String filter=EncounterQueryProcessor.queryStringBuilder(request, prettyPrint, p
 
 
 var searchResults = <%=encsJson%>;
+console.log(searchResults);
 
 var jdoql = '<%= filter.replaceAll("'", "\\\\'") %>';
 
@@ -699,11 +704,17 @@ function tableUp() {
 
 
 ////////
-var encs;
+
 $(document).ready( function() {
-	wildbook.init(function() {
-		encs = new wildbook.Collection.Encounters();
-		encs.fetch({
+	wildbook.init(function() { doTable(); });
+});
+
+
+//var encs;
+//$(document).ready( function() {
+//	wildbook.init(function() {
+//		encs = new wildbook.Collection.Encounters();
+//		encs.fetch({
 /*
 			// h/t http://stackoverflow.com/questions/9797970/backbone-js-progress-bar-while-fetching-collection
 			xhr: function() {
@@ -712,11 +723,11 @@ $(document).ready( function() {
 				return xhr;
 			},
 */
-			jdoql: jdoql,
-			success: function() { searchResults = encs.models; doTable(); },
-		});
-	});
-});
+//			jdoql: jdoql,
+//			success: function() { searchResults = encs.models; doTable(); },
+//		});
+//	});
+//});
 
 
 function fetchProgress(ev) {
