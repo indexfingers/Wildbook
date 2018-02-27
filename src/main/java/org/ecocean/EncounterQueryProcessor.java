@@ -1527,7 +1527,7 @@ for (int i = 0 ; i < rEncounters.size() ; i++) {
   if (isAdmin == false){
     // section to only include encounters where owner is currentUser or a collaborator
     if ((currentUser!= null) && !currentUser.equals("")){
-      if (owner.equals(currentUser)){
+      if (owner.equals(currentUser) || owner.equals("N/A") || owner.equals("") || owner == null){
         rEncountersOut.addElement(rEnc);
       } else {
         Collaboration c1 = Collaboration.findCollaborationWithUser(owner, collabs);
