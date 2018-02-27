@@ -1531,7 +1531,7 @@ for (int i = 0 ; i < rEncounters.size() ; i++) {
         rEncountersOut.addElement(rEnc);
       } else {
         Collaboration c1 = Collaboration.findCollaborationWithUser(owner, collabs);
-        if ((c1 != null) && c.getState().equals(Collaboration.STATE_APPROVED)){
+        if ((c1 != null) && c1.getState().equals(Collaboration.STATE_APPROVED)){
           rEncountersOut.addElement(rEnc);
         }
       }
