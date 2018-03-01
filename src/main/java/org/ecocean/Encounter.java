@@ -2456,6 +2456,18 @@ the decimal one (Double) .. half tempted to break out a class for this: lat/lon/
 	}
 
 
+  //pass in a Vector of Encounters, get out a list that the user CAN see
+  public static Vector notBlocked(Vector encs, HttpServletRequest request) {
+    Vector n_blk = new Vector();
+    for (int i = 0; i < encs.size() ; i++) {
+      Encounter e = (Encounter) encs.get(i);
+      if (e.canUserAccess(request)) n_blk.add(e);
+    }
+    return n_blk;
+  }
+
+
+
 /*
 in short, this rebuilds (or builds for the first time) ALL *derived* images (etc?) for this encounter.
 it is a baby step into the future of MediaAssets that hopefully will provide a smooth(er) transition to that.
