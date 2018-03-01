@@ -69,6 +69,9 @@
     MarkedIndividualQueryResult result = IndividualQueryProcessor.processQuery(myShepherd, request, order);
     rIndividuals = result.getResult();
 
+    // remove indivduals for which no authorised encounters
+    rIndividuals = MarkedIndividual.notBlocked(rIndividuals, request);
+
 
     if (rIndividuals.size() < listNum) {
       listNum = rIndividuals.size();
@@ -94,7 +97,7 @@
   #tabmenu a, a.active {
     color: #000;
     background: #E6EEEE;
-     
+
     border: 1px solid #CDCDCD;
     padding: 2px 5px 0px 5px;
     margin: 0;

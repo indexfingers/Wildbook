@@ -98,7 +98,7 @@ public class MarkedIndividual implements java.io.Serializable {
   private Vector interestedResearchers = new Vector();
 
   private String dateTimeCreated;
-  
+
   private String dateTimeLatestSighting;
 
   //FOR FAST QUERY PURPOSES ONLY - DO NOT MANUALLY SET
@@ -227,7 +227,7 @@ public class MarkedIndividual implements java.io.Serializable {
 		this.dateFirstIdentified = d;
 		return d;
 	}
-	
+
 	 public String refreshDateLastestSighting() {
 	    Encounter[] sorted = this.getDateSortedEncounters(true);
 	    if (sorted.length < 1) return null;
@@ -511,6 +511,15 @@ public class MarkedIndividual implements java.io.Serializable {
     return false;
   }
 
+
+  public static Vector notBlocked(Vector<MarkedIndividual> indies, HttpServletRequest request){
+    Vector<MarkedIndividual> n_blk = new Vector<MarkedIndividual>();
+    for (int i = 0; i < indies.size() ; i++) {
+      Vector n_blkEnc = Encounter.notBlocked(indies.get(i).getEncounters(), request);
+      if(n_blkEnc.size()>0) n_blk.add(indies.get(i));
+    }
+    return n_blk;
+  }
 
   /**
    * Returns the user-input name of the MarkedIndividual, which is also used as an Index in the FastObjects database
@@ -1151,7 +1160,7 @@ public class MarkedIndividual implements java.io.Serializable {
     }
     return "";
   }
-  
+
   public String getDateLatestSighting() {
     if (dateTimeLatestSighting != null) {
       return dateTimeLatestSighting;
@@ -1162,7 +1171,7 @@ public class MarkedIndividual implements java.io.Serializable {
   public void setDateTimeCreated(String time) {
     dateTimeCreated = time;
   }
-  
+
   public void setDateTimeLatestSighting(String time) {
     dateTimeLatestSighting = time;
   }
@@ -1374,7 +1383,7 @@ public class MarkedIndividual implements java.io.Serializable {
       }
     maxYearsBetweenResightings=maxYears;
     }
-  
+
 
 
   public String sidesSightedInPeriod(int m_startYear, int m_startMonth, int m_startDay, int m_endYear, int m_endMonth, int m_endDay, String locCode) {
@@ -1858,24 +1867,24 @@ public Float getMinDistanceBetweenTwoMarkedIndividuals(MarkedIndividual otherInd
           if (ma != null) {
             //JSONObject j = new JSONObject();
             JSONObject j = ma.sanitizeJson(req, new JSONObject());
-            
-            
-            
+
+
+
             if (j!=null) {
-              
-              
+
+
               //ok, we have a viable candidate
-              
+
               //put ProfilePhotos at the beginning
               if(ma.hasKeyword("ProfilePhoto")){al.add(0, j);}
               //otherwise, just add it to the bottom of the stack
               else{
                 al.add(j);
               }
-              
+
             }
-            
-            
+
+
           }
         }
     //}
@@ -1883,16 +1892,16 @@ public Float getMinDistanceBetweenTwoMarkedIndividuals(MarkedIndividual otherInd
     return al;
 
   }
-  
+
   public org.datanucleus.api.rest.orgjson.JSONObject getExemplarImage(HttpServletRequest req) throws JSONException {
-    
+
     ArrayList<org.datanucleus.api.rest.orgjson.JSONObject> al=getExemplarImages(req);
     if(al.size()>0){return al.get(0);}
     return new JSONObject();
-    
+
 
   }
-  
+
 
   // WARNING! THIS IS ONLY CORRECT IF ITS LOGIC CORRESPONDS TO getExemplarImage
   public String getExemplarPhotographer() {
