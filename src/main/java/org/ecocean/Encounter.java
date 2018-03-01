@@ -2469,7 +2469,7 @@ the decimal one (Double) .. half tempted to break out a class for this: lat/lon/
 
   public void clearSensitiveFields(){
     this.locationID = "";
-    this.location = "";
+    this.verbatimLocality = "";
     this.year = -1;
   }
 
