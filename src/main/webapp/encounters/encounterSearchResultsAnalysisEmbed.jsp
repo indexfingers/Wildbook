@@ -1,8 +1,8 @@
 <%--
   ~ Wildbook - A Mark-Recapture Framework
   ~ Copyright (C) 2015 \
-
-
+  
+  
   Jason Holmberg
   ~
   ~ This program is free software; you can redistribute it and/or
@@ -30,30 +30,30 @@
   //System.out.println("jdoQLstring is: "+request.getParameter("jdoqlString"));
   String context="context0";
   context=ServletUtilities.getContext(request);
-
+  
   DecimalFormat df = new DecimalFormat("#.##");
 
     //let's load encounterSearch.properties
     //String langCode = "en";
     String langCode=ServletUtilities.getLanguageCode(request);
-
+    
     Properties encprops = new Properties();
     //encprops.load(getClass().getResourceAsStream("/bundles/" + langCode + "/searchResultsAnalysis.properties"));
     encprops=ShepherdProperties.getProperties("searchResultsAnalysis.properties", langCode, context);
-
-
+    
+    
     Properties haploprops = new Properties();
     //haploprops.load(getClass().getResourceAsStream("/bundles/haplotypeColorCodes.properties"));
 	haploprops=ShepherdProperties.getProperties("haplotypeColorCodes.properties", "",context);
 
 		Properties collabProps = new Properties();
  		collabProps=ShepherdProperties.getProperties("collaboration.properties", langCode, context);
-
+    
     //get our Shepherd
     Shepherd myShepherd = new Shepherd(context);
 
 
-
+    
  	//prep for measurements summary
  	List<MeasurementDesc> measurementTypes=Util.findMeasurementDescs("en",context);
  	int numMeasurementTypes=measurementTypes.size();
@@ -67,7 +67,7 @@
 
  	}
 
-
+ 	
  	//prep for biomeasurements summary
  	List<MeasurementDesc> bioMeasurementTypes=Util.findBiologicalMeasurementDescs("en",context);
  	int numBioMeasurementTypes=bioMeasurementTypes.size();
@@ -98,40 +98,33 @@
     Query acceptedEncounters = myShepherd.getPM().newQuery(request.getParameter("jdoqlString"));
     Collection c = (Collection) (acceptedEncounters.execute());
     rEncounters=new Vector(c);
-
-
-
     acceptedEncounters.closeAll();
-
-    // remove encounters this user not authorised to see
-    rEncounters = Encounter.notBlocked(rEncounters, request);
-
-		//Vector blocked = Encounter.blocked(rEncounters, request);
-		//boolean accessible = (blocked.size() < 1);
-    boolean accessible = true;
+    
+		Vector blocked = Encounter.blocked(rEncounters, request);
+		boolean accessible = (blocked.size() < 1);
 
     //let's prep the HashTable for the haplo pie chart
-    List<String> allHaplos2=myShepherd.getAllHaplotypes();
+    List<String> allHaplos2=myShepherd.getAllHaplotypes(); 
     int numHaplos2 = allHaplos2.size();
     Hashtable<String,Integer> pieHashtable = new Hashtable<String,Integer>();
  	for(int gg=0;gg<numHaplos2;gg++){
  		String thisHaplo=allHaplos2.get(gg);
  		pieHashtable.put(thisHaplo, new Integer(0));
  	}
-
+    
  	//let's prep the HashTable for the sex pie chart
  	Hashtable<String,Integer> sexHashtable = new Hashtable<String,Integer>();
  	sexHashtable.put("male", new Integer(0));
  	sexHashtable.put("female", new Integer(0));
  	sexHashtable.put("unknown", new Integer(0));
-
+ 	
  	//let's prep the HashTable for the species pie chart
- 	  List<String> allSpecies2=CommonConfiguration.getIndexedPropertyValues("genusSpecies",context);
+ 	  List<String> allSpecies2=CommonConfiguration.getIndexedPropertyValues("genusSpecies",context); 
  	  int numSpecies2 = allSpecies2.size();
  	  Hashtable<String,Integer> speciesHashtable = new Hashtable<String,Integer>();
  		for(int gg=0;gg<numSpecies2;gg++){
  			String thisSpecies=allSpecies2.get(gg);
-
+ 			
  			StringTokenizer tokenizer=new StringTokenizer(thisSpecies," ");
  	  		if(tokenizer.countTokens()>=2){
 
@@ -140,13 +133,13 @@
  	          	//enc.setSpecificEpithet();
 
  	  	    }
-
+ 			
  			speciesHashtable.put(thisSpecies, new Integer(0));
  		}
-
-
+ 		
+ 		
  		//let's prep the HashTable for the country pie chart
- 		  List<String> allCountries=myShepherd.getAllCountries();
+ 		  List<String> allCountries=myShepherd.getAllCountries(); 
  		  int numCountries= allCountries.size();
  		  Hashtable<String,Integer> countriesHashtable = new Hashtable<String,Integer>();
  			for(int gg=0;gg<numCountries;gg++){
@@ -154,9 +147,9 @@
  				if(thisCountry!=null){
  					countriesHashtable.put(thisCountry, new Integer(0));
  				}
-
+ 				
  			}
-
+ 			
  	 		//let's prep the HashTable for the state pie chart
  	 		  List<String> states=CommonConfiguration.getIndexedPropertyValues("encounterState",context);
  	 		  int numStates= states.size();
@@ -166,12 +159,12 @@
  	 				if(thisState!=null){
  	 					statesHashtable.put(thisState, new Integer(0));
  	 				}
-
+ 	 				
  	 			}
-
-
+ 			
+ 			
  	 		//let's prep the HashTable for the assigned users pie chart
- 	 		  List<User> allUsers=myShepherd.getAllUsers();
+ 	 		  List<User> allUsers=myShepherd.getAllUsers(); 
  	 		  int numUsers= allUsers.size();
  	 		  Hashtable<String,Integer> usersHashtable = new Hashtable<String,Integer>();
  	 			for(int gg=0;gg<numUsers;gg++){
@@ -179,25 +172,25 @@
  	 				if(thisUser!=null){
  	 					usersHashtable.put(thisUser, new Integer(0));
  	 				}
-
+ 	 				
  	 			}
-
-
+ 	
+ 			
  			//let's prep the data structures for the discovery curve
  			Hashtable<Integer,Integer> discoveryCurveInflectionPoints= new Hashtable<Integer,Integer>();
  			ArrayList<String> dailyDuplicates=new ArrayList<String>();
-
+ 					
  			//let's prep the data structures for weekly frequency
  			Hashtable<Integer,Integer> frequencyWeeks = new Hashtable<Integer,Integer>();
  			//ArrayList<String> dailyDuplicates2=new ArrayList<String>();
  			for(int p=1;p<=53;p++){
  				frequencyWeeks.put(p, 0);
- 			}
-
+ 			}	
+ 			
  			//let's prep the bar charts for encounters per year
  			Hashtable<Integer,Integer> encountersPerYear= new Hashtable<Integer,Integer>();
-
-
+ 					
+ 		
  	int numPhotos=0;
  	int numContributors=0;
  	int numIdentified=0;
@@ -206,10 +199,10 @@
  	ArrayList<String> markedIndividuals=new ArrayList<String>();
  	int numUniqueEncounters=0;
  	 for(int y=0;y<resultSize;y++){
-
-
+ 		 
+ 		 
  		 Encounter thisEnc=(Encounter)rEncounters.get(y);
-
+ 		 
  		 //iterate up unique encounters number
  		 numUniqueEncounters++;
 
@@ -217,7 +210,7 @@
  		 if(thisEnc.getAdditionalImageNames()!=null){
  		 	numPhotos=numPhotos+thisEnc.getAdditionalImageNames().size();
  		 }
-
+ 			
  		//calculate the number of submitter contributors
  		if((thisEnc.getSubmitterEmail()!=null)&&(!thisEnc.getSubmitterEmail().equals(""))) {
  				//check for comma separated list
@@ -237,10 +230,10 @@
  					numContributors++;
  				}
  			}
+ 			
 
-
-
-
+ 			
+ 			
  			//calculate the number of photographer contributors
  			if((thisEnc.getPhotographerEmail()!=null)&&(!thisEnc.getPhotographerEmail().equals(""))) {
  				//check for comma separated list
@@ -260,17 +253,17 @@
  					numContributors++;
  				}
  			}
-
+ 		 
  			if((thisEnc.getIndividualID()!=null)&&(!thisEnc.getIndividualID().toLowerCase().equals("unassigned"))){numIdentified++;}
-
- 		//calculate marked individuals
+ 		 
+ 		//calculate marked individuals	 
  		 if((thisEnc.getIndividualID()!=null)&&(!thisEnc.getIndividualID().toLowerCase().equals("unassigned"))&&(!markedIndividuals.contains(thisEnc.getIndividualID().trim()))){
-
-
-
+ 			 
+ 			
+ 			 
  			 //add this individual to the list
  			 markedIndividuals.add(thisEnc.getIndividualID().trim());
-
+ 			
  			 //check for a daily duplicate
  			// String dailyDuplicateUniqueID=thisEnc.getIndividualID()+":"+thisEnc.getYear()+":"+thisEnc.getMonth()+":"+thisEnc.getDay();
  			// if(!dailyDuplicates.contains(dailyDuplicateUniqueID)){
@@ -281,38 +274,38 @@
  			 //else{numUniqueEncounters--;}
 
  		 }
-
+ 		 
  		 //weekly frequency tabulation
  		 if((thisEnc.getYear()>-1)&&(thisEnc.getMonth()>-1)&&(thisEnc.getDay()>-1)){
  			 GregorianCalendar cal=new GregorianCalendar(thisEnc.getYear(),thisEnc.getMonth()-1, thisEnc.getDay());
  			 int weekOfYear=cal.get(Calendar.WEEK_OF_YEAR);
  			 %>
-
+ 			 
  			 <!-- zzzAdding this date: week of year is <%=weekOfYear  %> for date: <%=thisEnc.getDate() %> -->
-
+ 			 
  			 <%
  			 Integer valueForWeek=frequencyWeeks.get(weekOfYear)+1;
  			 frequencyWeeks.put(weekOfYear, valueForWeek);
  		 }
-
+ 		 
  		 //year submitted tabulation
  		 if(thisEnc.getDWCDateAddedLong()!=null){
-
+ 			
  			 org.joda.time.DateTime myDateAdded =new org.joda.time.DateTime(thisEnc.getDWCDateAddedLong());
  			 Integer year=new Integer(myDateAdded.getYear());
-
+ 			 
  			 if(!encountersPerYear.containsKey(year)){
  				 encountersPerYear.put(year, new Integer(0));
-
+ 				
  			 }
-
+ 			 
  			Integer valueForYear=encountersPerYear.get(year)+1;
  			encountersPerYear.put(year, valueForYear);
- 			//System.out.println("    I just put: "+year+":"+valueForYear);
-
+ 			//System.out.println("    I just put: "+year+":"+valueForYear);	 
+ 	        
  		 }
-
-
+ 		 	
+ 		 
  		 //haplotype ie chart prep
  		 	if(thisEnc.getHaplotype()!=null){
       	   		if(pieHashtable.containsKey(thisEnc.getHaplotype().trim())){
@@ -320,7 +313,7 @@
       		   		pieHashtable.put(thisEnc.getHaplotype().trim(), thisInt);
       	   		}
  	 		}
-
+ 		 
  	 		 //state ie chart prep
  		 	if(thisEnc.getState()!=null){
       	   		if(statesHashtable.containsKey(thisEnc.getState().trim())){
@@ -328,8 +321,8 @@
       		   		statesHashtable.put(thisEnc.getState().trim(), thisInt);
       	   		}
  	 		}
-
- 	    //sex pie chart
+ 		 
+ 	    //sex pie chart 
  	    if(thisEnc.getSex()!=null){
  			if(thisEnc.getSex().equals("male")){
  		   		Integer thisInt = sexHashtable.get("male")+1;
@@ -348,9 +341,9 @@
  	    	Integer thisInt = sexHashtable.get("unknown")+1;
    		    sexHashtable.put("unknown", thisInt);
  	    }
-
+ 	    
  		//check the encounter species
-
+		 
 		 if((thisEnc.getGenus()!=null)&&(thisEnc.getSpecificEpithet()!=null)){
 			 String encGenusSpecies=thisEnc.getGenus()+" "+thisEnc.getSpecificEpithet();
 			 if(speciesHashtable.containsKey(encGenusSpecies)){
@@ -358,33 +351,33 @@
 	      		   speciesHashtable.put(encGenusSpecies, thisInt);
 	      		   //numSpeciesEntries++;
 	      	   }
-
+			 
 		 }
-
-
+		 
+		 
 		 //check the Encounter country
-
+		 
 		 if(thisEnc.getCountry()!=null){
 			 if(countriesHashtable.containsKey(thisEnc.getCountry())){
 	      		   Integer thisInt = countriesHashtable.get(thisEnc.getCountry())+1;
 	      		   countriesHashtable.put(thisEnc.getCountry(), thisInt);
-	      	 		//numCountryEntries++;
+	      	 		//numCountryEntries++;  
 			 }
 		 }
-
+		 
 		 //check the Encounter user
 		 if(thisEnc.getSubmitterID()!=null){
 			 if(usersHashtable.containsKey(thisEnc.getSubmitterID())){
 	      		   Integer thisInt = usersHashtable.get(thisEnc.getSubmitterID())+1;
 	      		   usersHashtable.put(thisEnc.getSubmitterID(), thisInt);
-	      	 		//numCountryEntries++;
+	      	 		//numCountryEntries++;  
 			 }
 		 }
-
+ 	    
  		//measurement
 		for(int b=0;b<numMeasurementTypes;b++){
 			if(thisEnc.getMeasurement(measurementTypes.get(b).getType())!=null){
-
+				
 					measurementValues[b].addValue(thisEnc.getMeasurement(measurementTypes.get(b).getType()).getValue().doubleValue());
 
 					//males versus females analysis
@@ -397,14 +390,14 @@
 
 			}
 		}
-
+		
  		//biomeasurement tabulation
 		for(int b=0;b<numBioMeasurementTypes;b++){
 			if(thisEnc.getBiologicalMeasurement(bioMeasurementTypes.get(b).getType())!=null){
-
+				
 					bioMeasurementValues[b].addValue(thisEnc.getBiologicalMeasurement(bioMeasurementTypes.get(b).getType()).getValue().doubleValue());
 
-
+					
 					//males versus females analysis
 					if((thisEnc.getSex()!=null)&&(thisEnc.getSex().equals("male"))){
 						bioMeasurementValuesMales[b].addValue(thisEnc.getBiologicalMeasurement(bioMeasurementTypes.get(b).getType()).getValue().doubleValue());
@@ -412,25 +405,25 @@
 					else if((thisEnc.getSex()!=null)&&(thisEnc.getSex().equals("female"))){
 						bioMeasurementValuesFemales[b].addValue(thisEnc.getBiologicalMeasurement(bioMeasurementTypes.get(b).getType()).getValue().doubleValue());
 					}
+					
 
-
-
+					
 			}
 		}
-
-
-
- 	 }
-
-
-
-
+ 	    
+ 	    
+ 		 
+ 	 }	
+ 	 
+ 	 
+ 	 
+ 	 
   %>
 
+   
+  
 
-
-
-
+  
       <script>
         function getQueryParameter(name) {
           name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
@@ -443,17 +436,17 @@
             return results[1];
         }
   </script>
-
+  
 
 
 
 <% if (accessible) { %>
-
+    
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
 <script type="text/javascript">
       google.load("visualization", "1", {packages:["corechart"]});
-
+      
       google.setOnLoadCallback(drawHaploChart);
       function drawHaploChart() {
         var data = new google.visualization.DataTable();
@@ -461,11 +454,11 @@
         data.addColumn('number', 'No. Recorded');
         data.addRows([
           <%
-          List<String> allHaplos=myShepherd.getAllHaplotypes();
+          List<String> allHaplos=myShepherd.getAllHaplotypes(); 
           int numHaplos = allHaplos.size();
+          
 
-
-
+          
           for(int hh=0;hh<numHaplos;hh++){
           %>
           ['<%=allHaplos.get(hh)%>',    <%=pieHashtable.get(allHaplos.get(hh))%>]
@@ -477,7 +470,7 @@
 		  }
           }
 		  %>
-
+          
         ]);
 
         var options = {
@@ -488,9 +481,9 @@
                    String haploColor="CC0000";
                    if((encprops.getProperty("defaultMarkerColor")!=null)&&(!encprops.getProperty("defaultMarkerColor").trim().equals(""))){
                 	   haploColor=encprops.getProperty("defaultMarkerColor");
-                   }
+                   }   
 
-
+                   
                    for(int yy=0;yy<numHaplos;yy++){
                        String haplo=allHaplos.get(yy);
                        if((haploprops.getProperty(haplo)!=null)&&(!haploprops.getProperty(haplo).trim().equals(""))){
@@ -501,16 +494,16 @@
 					<%
                    }
                    %>
-
-
+                   
+                   
           ]
         };
 
         var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
         chart.draw(data, options);
       }
-
-
+      
+      
       google.setOnLoadCallback(drawStateChart);
       function drawStateChart() {
         var statesdata = new google.visualization.DataTable();
@@ -518,8 +511,8 @@
         statesdata.addColumn('number', 'Number');
         statesdata.addRows([
           <%
-
-
+         
+          
           for(int hh=0;hh<numStates;hh++){
           %>
           ['<%=states.get(hh)%>',    <%=statesHashtable.get(states.get(hh))%>]
@@ -531,7 +524,7 @@
 		  }
           }
 		  %>
-
+          
         ]);
 
         var stateoptions = {
@@ -543,9 +536,9 @@
         var stateschart = new google.visualization.PieChart(document.getElementById('states_div'));
         stateschart.draw(statesdata, stateoptions);
       }
-
-
-
+      
+      
+      
       google.setOnLoadCallback(drawSexChart);
       function drawSexChart() {
         var data = new google.visualization.DataTable();
@@ -556,7 +549,7 @@
           ['male',    <%=sexHashtable.get("male")%>],
            ['female',    <%=sexHashtable.get("female")%>],
            ['unknown',    <%=sexHashtable.get("unknown")%>]
-
+          
         ]);
 
         <%
@@ -564,7 +557,7 @@
         if((encprops.getProperty("defaultMarkerColor")!=null)&&(!encprops.getProperty("defaultMarkerColor").trim().equals(""))){
      	   haploColor=encprops.getProperty("defaultMarkerColor");
         }
-
+        
         %>
         var options = {
           width: 450, height: 300,
@@ -575,7 +568,7 @@
         var chart = new google.visualization.PieChart(document.getElementById('sexchart_div'));
         chart.draw(data, options);
       }
-
+      
       google.setOnLoadCallback(drawSpeciesChart);
       function drawSpeciesChart() {
         var speciesData = new google.visualization.DataTable();
@@ -583,7 +576,7 @@
         speciesData.addColumn('number', 'No. Recorded');
         speciesData.addRows([
           <%
-          List<String> allSpecies=CommonConfiguration.getIndexedPropertyValues("genusSpecies",context);
+          List<String> allSpecies=CommonConfiguration.getIndexedPropertyValues("genusSpecies",context); 
           int numSpecies = speciesHashtable.size();
           Enumeration<String> speciesKeys=speciesHashtable.keys();
 
@@ -600,7 +593,7 @@
 		  }
          }
 		 %>
-
+          
         ]);
      var speciesOptions = {
           width: 450, height: 300,
@@ -610,8 +603,8 @@
       var speciesChart = new google.visualization.PieChart(document.getElementById('specieschart_div'));
         speciesChart.draw(speciesData, speciesOptions);
       }
-
-
+      
+      
       //countries chart
        google.setOnLoadCallback(drawCountriesChart);
       function drawCountriesChart() {
@@ -620,7 +613,7 @@
         countriesData.addColumn('number', 'No. Recorded');
         countriesData.addRows([
           <%
-          //List<String> allCountries=myShepherd.getAllCountries();
+          //List<String> allCountries=myShepherd.getAllCountries(); 
           //int numSpecies = speciesHashtable.size();
           Enumeration<String> countriesKeys=countriesHashtable.keys();
 
@@ -637,7 +630,7 @@
 		  }
          }
 		 %>
-
+          
         ]);
      var countriesOptions = {
           width: 450, height: 300,
@@ -647,7 +640,7 @@
       var countriesChart = new google.visualization.PieChart(document.getElementById('countrieschart_div'));
         countriesChart.draw(countriesData, countriesOptions);
       }
-
+      
       //users chart
       google.setOnLoadCallback(drawUsersChart);
      function drawUsersChart() {
@@ -670,18 +663,18 @@
 		  }
         }
 		 %>
-
+         
        ]);
     var usersOptions = {
          width: 450, height: 300,
          title: 'Reported Encounters per Assigned User',
-
+         
        };
      var usersChart = new google.visualization.PieChart(document.getElementById('userschart_div'));
        usersChart.draw(usersData, usersOptions);
      }
-
-
+      
+      
       //discovery curve
       google.setOnLoadCallback(drawDiscoveryCurve);
      function drawDiscoveryCurve() {
@@ -705,7 +698,7 @@
 		  }
         }
 		 %>
-
+         
        ]);
     var discoveryCurveOptions = {
          width: 450, height: 300,
@@ -717,7 +710,7 @@
      var discoveryCurveChart = new google.visualization.ScatterChart(document.getElementById('discoveryCurve_div'));
      discoveryCurveChart.draw(discoveryCurveData, discoveryCurveOptions);
      }
-
+     
    //frequency chart
      google.setOnLoadCallback(drawFrequencyChart);
     function drawFrequencyChart() {
@@ -741,7 +734,7 @@
 		  }
        }
 		 %>
-
+        
       ]);
    var frequencyChartOptions = {
         width: 450, height: 300,
@@ -751,11 +744,11 @@
       };
     var frequencyChart = new google.visualization.ColumnChart(document.getElementById('frequency_div'));
     frequencyChart.draw(frequencyData, frequencyChartOptions);
-
-
+    
+    
    }
-
-
+   
+    
     //date added chart
     google.setOnLoadCallback(drawYearAddedChart);
    function drawYearAddedChart() {
@@ -764,28 +757,28 @@
      yearAddedData.addColumn('number', 'No. Encounters');
      yearAddedData.addRows([
        <%
-
-
-
+       
+       
+       
        //let's do some quality control
        int numYears=encountersPerYear.size();
-
-
+       
+       
        //first determine list range
        int minYearAddedValue=999999;
        int maxYearAddedValue=-1;
        Enumeration<Integer> years=encountersPerYear.keys();
        //System.out.println("numYears is:"+numYears);
-
+      
        while(years.hasMoreElements()){
     	   Integer thisYear=years.nextElement();
     	   if(thisYear<minYearAddedValue)minYearAddedValue=thisYear;
     	   if(thisYear>maxYearAddedValue)maxYearAddedValue=thisYear;
 
        }
+       
 
-
-
+       
        for(int q=minYearAddedValue;q<=maxYearAddedValue;q++){
      	  if(!encountersPerYear.containsKey(new Integer(q))){encountersPerYear.put(new Integer(q), new Integer(0));}
        		%>
@@ -798,7 +791,7 @@
 		  	}
       	}
 		 %>
-
+       
      ]);
 
     var yearAddedChartOptions = {
@@ -809,10 +802,10 @@
      };
    var yearAddedChart = new google.visualization.ColumnChart(document.getElementById('yearadded_div'));
    yearAddedChart.draw(yearAddedData, yearAddedChartOptions);
-
+    
    }
-
-
+   
+   
    //total encounters by year chart
    google.setOnLoadCallback(drawYearTotalsChart);
   function drawYearTotalsChart() {
@@ -825,7 +818,7 @@
       int additionTotal=0;
       for(int q=minYearAddedValue;q<=maxYearAddedValue;q++){
     	  if(!encountersPerYear.containsKey(new Integer(q))){encountersPerYear.put(new Integer(q), new Integer(0));}
-
+	
       		%>
       		['<%=q%>',<%=(encountersPerYear.get(new Integer(q))+additionTotal) %>]
 		  	<%
@@ -837,7 +830,7 @@
       		additionTotal+=encountersPerYear.get(new Integer(q));
      	}
 		 %>
-
+      
     ]);
 
    var yearTotalsChartOptions = {
@@ -848,15 +841,15 @@
     };
   var yearTotalsChart = new google.visualization.ColumnChart(document.getElementById('yeartotals_div'));
   yearTotalsChart.draw(yearTotalsData, yearTotalsChartOptions);
-
+   
   }
-
+      
 </script>
 
 <% } %>
+    
 
-
-
+ 
 <% if (accessible) { %>
 
  <p>Number matching encounters: <%=resultSize %></p>
@@ -870,13 +863,13 @@
 <p><strong>Measurements</strong></p>
 <%
  		//measurement
-
+		
 		if(measurementTypes.size()>0){
 			for(int b=0;b<numMeasurementTypes;b++){
 			%>
-				<p>Mean <%= measurementTypes.get(b).getType()%>:
-				<%
-
+				<p>Mean <%= measurementTypes.get(b).getType()%>: 
+				<% 
+				
 				//now report averages
 				if(measurementValues[b].getN()>0){
 				%>
@@ -892,7 +885,7 @@
 					&nbsp;No measurement values available.
 					<%
 				}
-
+				
 				%>
 				</p>
 			<%
@@ -901,19 +894,19 @@
 		else{
 			%>
 			<p>No measurement types defined.</p>
-			<%
+			<% 
 		}
 %>
 <p><strong>Biological/Chemical Measurements</strong></p>
 <%
  		//measurement
-
+		
 		if(bioMeasurementTypes.size()>0){
 			for(int b=0;b<numBioMeasurementTypes;b++){
 			%>
-				<p>Mean <%= bioMeasurementTypes.get(b).getType()%>:
-				<%
-
+				<p>Mean <%= bioMeasurementTypes.get(b).getType()%>: 
+				<% 
+				
 				//now report averages
 				if(bioMeasurementValues[b].getN()>0){
 				%>
@@ -929,7 +922,7 @@
 					&nbsp;No measurement values available.
 					<%
 				}
-
+				
 				%>
 				</p>
 			<%
@@ -938,13 +931,13 @@
 		else{
 			%>
 			<p>No measurement types defined.</p>
-			<%
+			<% 
 		}
 
 
      try {
  %>
-
+ 
 <p><strong>Charting</strong></p>
 
  <div id="chart_div"></div>
@@ -957,7 +950,7 @@
 		<div id="specieschart_div"></div>
 		<%
         }
-
+		
         if(CommonConfiguration.showProperty("showCountry",context)){
         %>
 		<div id="countrieschart_div"></div>
@@ -971,21 +964,21 @@
  	<div id="yearadded_div"></div>
  	<div id="yeartotals_div"></div>
  <%
-
-     }
+ 
+     } 
      catch (Exception e) {
        e.printStackTrace();
      }
+ 
 
 
 
-
-
-
+ 
+ 
    myShepherd.rollbackDBTransaction();
    myShepherd.closeDBTransaction();
    rEncounters = null;
-
+ 
 %>
 
 
@@ -994,3 +987,7 @@
 	<p><%=collabProps.getProperty("functionalityBlockedMessage")%></p>
 
 <% } %>
+
+
+
+
