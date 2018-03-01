@@ -1506,9 +1506,9 @@ prettyPrint.append("<br />");
 query.closeAll();
 
 
-//silo security logging and removal of encounters not belonging to user or collaborator...
-Vector<Encounter> rEncountersOut=new Vector<Encounter>();
-boolean isAdmin = request.isUserInRole("admin");
+//silo security logging and (commented) removal of encounters not belonging to user or collaborator...
+//Vector<Encounter> rEncountersOut=new Vector<Encounter>();
+//boolean isAdmin = request.isUserInRole("admin");
 
 List<Collaboration> collabs = Collaboration.collaborationsForCurrentUser(request);
 String url = request.getRequestURL().toString() + "?" + request.getQueryString();
@@ -1524,7 +1524,7 @@ for (int i = 0 ; i < rEncounters.size() ; i++) {
   Encounter rEnc = (Encounter)rEncounters.get(i);
   String owner = rEnc.getAssignedUsername();
 
-  if (isAdmin == false){
+  /*if (isAdmin == false){
     // section to only include encounters where owner is currentUser or a collaborator
     if ((currentUser!= null) && !currentUser.equals("")){
       if (owner.equals(currentUser) || owner.equals("N/A") || owner.equals("") || owner == null){
@@ -1536,7 +1536,7 @@ for (int i = 0 ; i < rEncounters.size() ; i++) {
         }
       }
     }
-  }
+  }*/
 
   if ((currentUser != null) && !currentUser.equals("") && (owner != null) && !owner.equals(currentUser)) {
     Collaboration c = Collaboration.findCollaborationWithUser(owner, collabs);
@@ -1557,11 +1557,12 @@ for (int i = 0 ; i < rEncounters.size() ; i++) {
     }
   }
 
-  if (isAdmin == true){
-    rEncountersOut = rEncounters;
-  }
+  //if (isAdmin == true){
+  //  rEncountersOut = rEncounters;
+  //}
   //System.out.println("rEncounters size is: "+rEncounters.size());
-  return (new EncounterQueryResult(rEncountersOut,filter,prettyPrint.toString()));
+  //return (new EncounterQueryResult(rEncountersOut,filter,prettyPrint.toString()));
+  return (new EncounterQueryResult(rEncounters,filter,prettyPrint.toString()));
 
 }
 
