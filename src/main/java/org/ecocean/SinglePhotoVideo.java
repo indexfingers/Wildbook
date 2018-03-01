@@ -37,7 +37,7 @@ public class SinglePhotoVideo extends DataCollectionEvent {
   String correspondingStoryID;
 
   public String webURL;
-  
+
   /*
   private String thumbnailFilename;
   private String thumbnailFullFileSystemPath;
@@ -91,6 +91,17 @@ public class SinglePhotoVideo extends DataCollectionEvent {
 System.out.println("full path??? = " + this.fullFileSystemPath + " WRITTEN!");
 	}
 
+
+
+  //pass in a Vector of Encounters, get out a list that the user CAN see
+  public static List notBlocked(ArrayList<SinglePhotoVideo> thumbLocs , HttpServletRequest request, Shepherd myShepherd) {
+    ArrayList<SinglePhotoVideo> n_blk = new ArrayList<SinglePhotoVideo>();
+    for (int i = 0; i < thumbLocs.size() ; i++) {
+      Encounter e =  myShepherd.getEncounter(thumbLocs.get(i).getCorrespondingEncounterNumber());
+      if (e.canUserAccess(request)) n_blk.add(thumbLocs.get(i));
+    }
+    return n_blk;
+  }
   /**
    * Returns the photo or video represented by this object as a java.io.File
    * This is a convenience method.
@@ -300,7 +311,7 @@ System.out.println("creating MediaAsset for " + this);
         MediaAssetFactory.save(ma, myShepherd);
         return ma;
     }
-    
+
     public String getWebURL(){return webURL;}
     public void setWebURL(String earl){this.webURL=earl;}
 

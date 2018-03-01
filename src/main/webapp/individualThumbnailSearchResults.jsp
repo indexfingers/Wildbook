@@ -60,6 +60,7 @@
 	int numThumbnails=0;
 	List<SinglePhotoVideo> thumbLocs=new ArrayList<SinglePhotoVideo>();
 	thumbLocs=myShepherd.getMarkedIndividualThumbnails(request, rIndividuals.iterator(), startNum, endNum, keywords);
+  thumbLocs = SinglePhotoVideo.notBlocked(thumbLocs, request, myShepherd);
 
 
     String queryString = "";
