@@ -1562,6 +1562,7 @@ for (int i = 0 ; i < rEncounters.size() ; i++) {
   //}
   //System.out.println("rEncounters size is: "+rEncounters.size());
   //return (new EncounterQueryResult(rEncountersOut,filter,prettyPrint.toString()));
+  rEncounters = Encounter.notBlocked(rEncounters, request);
   return (new EncounterQueryResult(rEncounters,filter,prettyPrint.toString()));
 
 }
