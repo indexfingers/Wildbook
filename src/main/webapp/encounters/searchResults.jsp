@@ -32,8 +32,11 @@ context=ServletUtilities.getContext(request);
 
   	EncounterQueryResult queryResult = EncounterQueryProcessor.processQuery(myShepherd, request, "year descending, month descending, day descending");
  	rEncounters = queryResult.getResult();
+  // remove encounters this user not authorised to see
+  rEncounters = Encounter.notBlocked(rEncounters, request);
+
  	System.out.println("Size of rEncounters = " + rEncounters.size());
- 	
+
 
 
 //--let's estimate the number of results that might be unique
@@ -418,7 +421,7 @@ var sTable = false;
 
 var iaResults;
 function doTable() {
-	
+
 	for (var i = 0 ; i < searchResults.length ; i++) {
 		searchResults[i] = new wildbook.Model.Encounter(searchResults[i]);
 	}
