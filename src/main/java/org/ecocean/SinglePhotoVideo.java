@@ -94,8 +94,8 @@ System.out.println("full path??? = " + this.fullFileSystemPath + " WRITTEN!");
 
 
   //pass in a Vector of Encounters, get out a list that the user CAN see
-  public static List notBlocked(ArrayList<SinglePhotoVideo> thumbLocs , HttpServletRequest request, Shepherd myShepherd) {
-    ArrayList<SinglePhotoVideo> n_blk = new ArrayList<SinglePhotoVideo>();
+  public static List notBlocked(List<SinglePhotoVideo> thumbLocs , HttpServletRequest request, Shepherd myShepherd) {
+    List<SinglePhotoVideo> n_blk = new ArrayList<SinglePhotoVideo>();
     for (int i = 0; i < thumbLocs.size() ; i++) {
       Encounter e =  myShepherd.getEncounter(thumbLocs.get(i).getCorrespondingEncounterNumber());
       if (e.canUserAccess(request)) n_blk.add(thumbLocs.get(i));
