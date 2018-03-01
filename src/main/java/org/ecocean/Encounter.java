@@ -2467,6 +2467,13 @@ the decimal one (Double) .. half tempted to break out a class for this: lat/lon/
   }
 
 
+  public void clearSensitiveFields(){
+    this.locationID = "";
+    this.location = "";
+    this.year = -1;
+  }
+
+
 
 /*
 in short, this rebuilds (or builds for the first time) ALL *derived* images (etc?) for this encounter.

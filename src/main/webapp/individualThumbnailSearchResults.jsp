@@ -13,7 +13,7 @@
   //if(!shepherdDataDir.exists()){shepherdDataDir.mkdirs();}
   File encountersDir=new File(shepherdDataDir.getAbsolutePath()+"/encounters");
   //if(!encountersDir.exists()){encountersDir.mkdirs();}
-  
+
     int startNum = 1;
     int endNum = 45;
 
@@ -34,7 +34,7 @@
 //let's load thumbnailSearch.properties
     //String langCode = "en";
     String langCode=ServletUtilities.getLanguageCode(request);
-    
+
 
     Properties encprops = new Properties();
     //encprops.load(getClass().getResourceAsStream("/bundles/" + langCode + "/individualThumbnailSearchResults.properties"));
@@ -60,20 +60,20 @@
 	int numThumbnails=0;
 	List<SinglePhotoVideo> thumbLocs=new ArrayList<SinglePhotoVideo>();
 	thumbLocs=myShepherd.getMarkedIndividualThumbnails(request, rIndividuals.iterator(), startNum, endNum, keywords);
-	
-    
+
+
     String queryString = "";
     if (request.getQueryString() != null) {
       queryString = request.getQueryString();
     }
 
   %>
- 
- 
- 
+
+
+
    <jsp:include page="header.jsp" flush="true"/>
- 
- 
+
+
   <!--
     1 ) Reference to the files containing the JavaScript and CSS.
     These files must be located on your server.
@@ -89,7 +89,7 @@
 
   <script type="text/javascript">
   hs.graphicsDir = 'highslide/highslide/graphics/';
-  
+
   hs.showCredits = false;
 
   //transition behavior
@@ -101,7 +101,7 @@
   hs.restoreDuration = 0;
   hs.numberOfImagesToPreload = 15;
   hs.dimmingDuration = 0;
-  
+
   hs.height = 250;
   hs.align = 'auto';
 	hs.anchor = 'top';
@@ -150,7 +150,7 @@
   #tabmenu a, a.active {
     color: #000;
     background: #E6EEEE;
-    
+
     border: 1px solid #CDCDCD;
     padding: 2px 5px 0px 5px;
     margin: 0;
@@ -170,15 +170,15 @@
   }
 
   #tabmenu a:visited {
-    
+
   }
 
   #tabmenu a.active:hover {
     color: #000;
     border-bottom: 1px solid #8DBDD8;
   }
-  
-  
+
+
 
   div.scroll {
     height: 200px;
@@ -200,8 +200,8 @@
 	        %>
 	        <%=encprops.getProperty("searchTitle")%>
 	        <%
-        	
-          } 
+
+          }
         else {
         %>
         <%=encprops.getProperty("title")%>
@@ -300,22 +300,22 @@
 <table id="results" border="0" width="100%">
     <%
 
-			
+
 			int countMe=0;
 			//Vector thumbLocs=new Vector();
-		
-			
+
+
 			try {
 				//thumbLocs=myShepherd.getMarkedIndividualThumbnails(request, rIndividuals.iterator(), startNum, endNum, keywords);
-				
-				
+
+
 				//now let's order these alphabetical by the highest keyword
 				//Cascadia Research only! TBD--remove on release of Shepherd Project
 				//Collections.sort(thumbLocs, (new ThumbnailKeywordComparator()));
-				
-				
-				
-			
+
+
+
+
 					for(int rows=0;rows<15;rows++) {		%>
 
   <tr valign="top">
@@ -325,6 +325,9 @@
 								if(countMe<thumbLocs.size()) {
 									Encounter thisEnc = myShepherd.getEncounter(thumbLocs.get(countMe).getCorrespondingEncounterNumber());
 									boolean visible = thisEnc.canUserAccess(request);
+                  if(!visible){
+                    thisEnc.clearSensitiveFields();
+                  }
 									String encSubdir = thisEnc.subdir();
 
 									String thumbLink="";
@@ -335,10 +338,10 @@
 									}
 									else{
 										thumbLink="http://"+CommonConfiguration.getURLLocation(request)+"/images/video.jpg";
-										
+
 									}
 									String link=thumbLocs.get(countMe).getWebURL();
-						
+
 							%>
 
     <td>
@@ -346,7 +349,7 @@
         <tr>
           <td valign="top">
 <% if (visible) { %>
-            <a href="<%=link%>" 
+            <a href="<%=link%>"
             	<%
             	if(!thumbLink.endsWith("video.jpg")){
             	%>
@@ -358,7 +361,7 @@
 <% } else { %><a><% } %>
             <img width="250px" height="*" class="lazyload" src="http://<%=CommonConfiguration.getURLLocation(request) %>/cust/mantamatcher/img/individual_placeholder_image.jpg" data-src="<%=thumbLink%>" alt="photo" border="1" title="<%= (visible ? encprops.getProperty("clickEnlarge") : "") %>" /></a>
 
-            <div 
+            <div
             	<%
             	if(!thumbLink.endsWith("video.jpg")){
             	%>
@@ -390,9 +393,9 @@
                         //Encounter thisEnc = myShepherd.getEncounter(thumbLocs.get(countMe).getCorrespondingEncounterNumber());
                       %>
                       <tr>
-                      <% 
+                      <%
                       if(!thumbLink.endsWith("video.jpg")){
-                    	  
+
                       %>
                         <td><span class="caption"><em><%=(countMe + startNum) %>
                         </em></span></td>
@@ -418,7 +421,7 @@
                           href="individuals.jsp?number=<%=thisEnc.getIndividualID() %>" target="_blank"><%=thisEnc.getIndividualID() %>
                         </a></span></td>
                       </tr>
-                      
+
                       <%
       			if(CommonConfiguration.showProperty("showTaxonomy",context)){
       				if((thisEnc.getGenus()!=null)&&(thisEnc.getSpecificEpithet()!=null)){
@@ -457,14 +460,14 @@
 											<%=encprops.getProperty("matchingKeywords") %>
 											<%
                       						List<Keyword> myWords = thumbLocs.get(countMe).getKeywords();
-											if(myWords!=null){	
+											if(myWords!=null){
 												int myWordsSize=myWords.size();
 						                            for (int kwIter = 0; kwIter<myWordsSize; kwIter++) {
 						                              %>
 						 								<br/><%= ("<strong>" + myWords.get(kwIter).getReadableName() + "</strong>")%>
 						 								<%
 						                            }
-											}    
+											}
 
 
 
@@ -479,7 +482,7 @@
                       %>
 
                     </table>
-                    
+
                     <%
                     if(!thumbLink.endsWith("video.jpg")){
                     %>
@@ -491,7 +494,7 @@
                       if (CommonConfiguration.showEXIFData(context)&&!thumbLink.endsWith("video.jpg")) {
                     %>
 
-                 
+
 
 
                   </td>
@@ -501,7 +504,7 @@
                 </tr>
               </table>
               <%
-              
+
               %>
             </div>
 </div>
@@ -554,10 +557,10 @@
 											<%=encprops.getProperty("matchingKeywords") %>
 											<%
 												List<Keyword> myWords = thumbLocs.get(countMe).getKeywords();
-												if(myWords!=null){		
+												if(myWords!=null){
 													int myWordsSize=myWords.size();
 							                            for (int kwIter = 0; kwIter<myWordsSize; kwIter++) {
-							                          
+
 							                      		 	%>
 							 								<br/><%= ("<strong>" + myWords.get(kwIter).getReadableName() + "</strong>")%>
 							 								<%
@@ -666,5 +669,3 @@
 </div>
 
 <jsp:include page="footer.jsp" flush="true"/>
-
-
