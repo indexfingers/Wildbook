@@ -512,11 +512,20 @@ public class MarkedIndividual implements java.io.Serializable {
   }
 
 
+  public void setEncounters(Vector<Encounter> encs, String context){
+    this.encounters = encs;
+    this.refreshDependentProperties(context);
+  }
+
   public static Vector notBlocked(Vector<MarkedIndividual> indies, HttpServletRequest request){
     Vector<MarkedIndividual> n_blk = new Vector<MarkedIndividual>();
     for (int i = 0; i < indies.size() ; i++) {
-      Vector n_blkEnc = Encounter.notBlocked(indies.get(i).getEncounters(), request);
-      if(n_blkEnc.size()>0) n_blk.add(indies.get(i));
+      MarkedIndividual indie = indies.get(i);
+      Vector n_blkEnc = Encounter.notBlocked(indie.getEncounters(), request);
+      if(n_blkEnc.size()>0){
+        indie.setEncounters(n_blkEnc, ServletUtilities.getContext(request));
+        n_blk.add(indie);
+       }
     }
     return n_blk;
   }
