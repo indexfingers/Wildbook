@@ -60,7 +60,9 @@
 	int numThumbnails=0;
 	List<SinglePhotoVideo> thumbLocs=new ArrayList<SinglePhotoVideo>();
 	thumbLocs=myShepherd.getMarkedIndividualThumbnails(request, rIndividuals.iterator(), startNum, endNum, keywords);
-  thumbLocs = SinglePhotoVideo.notBlocked(thumbLocs, request, myShepherd);
+
+  //not blocked now happens in IndividualQueryProcessor
+  //thumbLocs = SinglePhotoVideo.notBlocked(thumbLocs, request, myShepherd);
 
 
     String queryString = "";
@@ -326,9 +328,9 @@
 								if(countMe<thumbLocs.size()) {
 									Encounter thisEnc = myShepherd.getEncounter(thumbLocs.get(countMe).getCorrespondingEncounterNumber());
 									boolean visible = thisEnc.canUserAccess(request);
-                  if(!visible){
-                    thisEnc.clearSensitiveFields();
-                  }
+                  //if(!visible){
+                  //  thisEnc.clearSensitiveFields();
+                //  }
 									String encSubdir = thisEnc.subdir();
 
 									String thumbLink="";

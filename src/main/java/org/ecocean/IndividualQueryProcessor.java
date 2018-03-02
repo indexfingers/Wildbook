@@ -677,7 +677,7 @@ public class IndividualQueryProcessor {
               }
               locIDFilter+=" )";
 
-            
+
                 if(filter.indexOf("encounters.contains(enc3_"+kwIter+")")==-1){
                   if(kwIter>0){filter+=" "+photoKeywordOperator+" ";}
                   filter+="(  encounters.contains(enc3_"+kwIter+")";
@@ -687,7 +687,7 @@ public class IndividualQueryProcessor {
 
                 if(filter.indexOf("photo"+kwIter+".mediaAsset.keywords.contains(word"+kwIter+")")==-1){filter+=" && photo"+kwIter+".mediaAsset.keywords.contains(word"+kwIter+")";}
                 filter+=(" && "+locIDFilter+")");
-            
+
 
 
               if(!jdoqlVariableDeclaration.contains("org.ecocean.Encounter enc3_"+kwIter)){jdoqlVariableDeclaration+=";org.ecocean.Encounter enc3_"+kwIter;}
@@ -1329,7 +1329,7 @@ public class IndividualQueryProcessor {
           else if(request.getParameter("sort").equals("numberEncounters")) {allSharks=myShepherd.getAllMarkedIndividuals(query, "numberEncounters descending", paramMap);}
           else if(request.getParameter("sort").equals("numberLocations")) {allSharks=myShepherd.getAllMarkedIndividuals(query, "numberLocations descending", paramMap);}
           else if(request.getParameter("sort").equals("dateTimeLatestSighting")) {allSharks=myShepherd.getAllMarkedIndividuals(query, "dateTimeLatestSighting descending", paramMap);}
-          
+
           else{
             allSharks=myShepherd.getAllMarkedIndividuals(query, "individualID ascending", paramMap);
           }
@@ -1518,6 +1518,9 @@ public class IndividualQueryProcessor {
     }
 
     query.closeAll();
+
+    // remove indivduals for which no authorised encounters
+    rIndividuals = MarkedIndividual.notBlocked(rIndividuals, request);
 		return (new MarkedIndividualQueryResult(rIndividuals,filter,prettyPrint.toString()));
 
   }

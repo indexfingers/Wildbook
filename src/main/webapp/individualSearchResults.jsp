@@ -69,8 +69,8 @@
     MarkedIndividualQueryResult result = IndividualQueryProcessor.processQuery(myShepherd, request, order);
     rIndividuals = result.getResult();
 
-    // remove indivduals for which no authorised encounters
-    rIndividuals = MarkedIndividual.notBlocked(rIndividuals, request);
+    // remove indivduals for which no authorised encounters: now should be done by IndividualQueryProcessor
+    //rIndividuals = MarkedIndividual.notBlocked(rIndividuals, request);
 
 
     if (rIndividuals.size() < listNum) {
