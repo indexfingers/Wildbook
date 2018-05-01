@@ -29,32 +29,33 @@ out.println("<xmp>");
 
 JSONObject c = new JSONObject();
 
-/*
+
 //////////////// begin S3 //////////////
 c.put("urlAccessible", true);
-c.put("bucket", "default-bucket-name-goes-here");
+c.put("bucket", "sosf-ws-wildbook");
 
 //these are "optional".  if left out, then default aws credentials will be used, which is somewhere *like* /usr/share/tomcat7/.aws/credentials  (ymmv)
-c.put("AWSAccessKeyId", "XXXXX");
-c.put("AWSSecretAccessKey", "YYYYY");
+//c.put("AWSAccessKeyId", "XXXXX");
+//c.put("AWSSecretAccessKey", "YYYYY");
 
 AssetStoreConfig cfg = new AssetStoreConfig(c.toString());
-S3AssetStore as = new S3AssetStore("example S3 AssetStore", cfg, true);
+S3AssetStore as = new S3AssetStore("S3 AssetStore", cfg, true);
 myShepherd.getPM().makePersistent(as);
 //////////////// end S3 //////////////
+
+
+
+
+/*
+//////////////// begin local //////////////
+LocalAssetStore as = new LocalAssetStore("example Local AssetStore", new File("/var/lib/tomcat7/some/path").toPath(), "http://example.com/path", true);
+myShepherd.getPM().makePersistent(as);
+//////////////// end local //////////////
 */
 
 
 
 
-//////////////// begin local //////////////
-LocalAssetStore as = new LocalAssetStore("example Local AssetStore", new File("/var/lib/tomcat7/some/path").toPath(), "http://example.com/path", true);
-myShepherd.getPM().makePersistent(as);
-//////////////// end local //////////////
-
-
-
- 
 out.println("created: " + as.toString());
 out.println(as.getConfig());
 
