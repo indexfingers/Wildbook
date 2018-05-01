@@ -1518,9 +1518,6 @@ public class IndividualQueryProcessor {
     query.closeAll();
 
     // remove indivduals for which no authorised encounters
-    if(removedBlocked == null){
-      removeBlocked = true;
-    }
     if(removeBlocked == true){
       rIndividuals = MarkedIndividual.notBlocked(rIndividuals, request);
     }
