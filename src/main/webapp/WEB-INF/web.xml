@@ -117,6 +117,8 @@
                 /api/** = authcBasicWildbook, roles[rest]
                 /rest/** = authcBasicWildbook, roles[rest]
 
+                /submit.jsp = authc
+
 
 			    /RelationshipCreate  = authc, roles[researcher]
 		   /RelationshipDelete  = authc, roles[researcher]

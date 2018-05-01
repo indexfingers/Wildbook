@@ -89,6 +89,8 @@ context=ServletUtilities.getContext(request);
 	  String name = request.getParameter("name");
 	  MarkedIndividual sharky=myShepherd.getMarkedIndividual(name);
 	  haveGPSData = sharky.returnEncountersWithGPSData(true, true,context);
+    // remove encounters this user not authorised to see
+    haveGPSData = Encounter.notBlocked(haveGPSData, request);
   }
   else if(request.getParameter("occurrence_number")!=null){
 	  String name = request.getParameter("occurrence_number");
@@ -332,15 +334,15 @@ String lastLatLong="";
 
 
 
-		    
- zoomChangeBoundsListener = 
+
+ zoomChangeBoundsListener =
 	    google.maps.event.addListenerOnce(map, 'bounds_changed', function(event) {
 	        if ((this.getZoom())&&(this.getZoom()>7)){
 	            this.setZoom(7);
 	        }
 	});
 setTimeout(function(){google.maps.event.removeListener(zoomChangeBoundsListener)}, 2000);
-		    
+
 
 
 

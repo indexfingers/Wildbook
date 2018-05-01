@@ -88,7 +88,9 @@ String order ="nickName ASC NULLS LAST";
 
 request.setAttribute("rangeStart", startNum);
 request.setAttribute("rangeEnd", endNum);
-MarkedIndividualQueryResult result = IndividualQueryProcessor.processQuery(myShepherd, request, order);
+
+boolean removeBlocked = false;
+MarkedIndividualQueryResult result = IndividualQueryProcessor.processQuery(myShepherd, request, order, removeBlocked);
 
 rIndividuals = result.getResult();
 

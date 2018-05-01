@@ -1296,6 +1296,11 @@ public class IndividualQueryProcessor {
   }
 
   public static MarkedIndividualQueryResult processQuery(Shepherd myShepherd, HttpServletRequest request, String order){
+    boolean removeBlocked = true;
+    return processQuery(myShepherd,request, order,removeBlocked);
+  }
+
+  public static MarkedIndividualQueryResult processQuery(Shepherd myShepherd, HttpServletRequest request, String order, boolean removeBlocked){
       Iterator<MarkedIndividual> allSharks;
       Vector<MarkedIndividual> rIndividuals=new Vector<MarkedIndividual>();
       StringBuffer prettyPrint=new StringBuffer();
@@ -1417,15 +1422,8 @@ public class IndividualQueryProcessor {
                    rIndividuals.remove(q);
                    q--;
                 }
-
-
               }
-
-
         }
-
-
-
         prettyPrint.append("<br />");
       }
 
@@ -1520,7 +1518,12 @@ public class IndividualQueryProcessor {
     query.closeAll();
 
     // remove indivduals for which no authorised encounters
-    rIndividuals = MarkedIndividual.notBlocked(rIndividuals, request);
+    if(removedBlocked == null){
+      removeBlocked = true;
+    }
+    if(removeBlocked == true){
+      rIndividuals = MarkedIndividual.notBlocked(rIndividuals, request);
+    }
 		return (new MarkedIndividualQueryResult(rIndividuals,filter,prettyPrint.toString()));
 
   }
