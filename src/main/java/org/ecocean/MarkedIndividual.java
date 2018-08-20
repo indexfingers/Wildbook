@@ -120,9 +120,9 @@ public class MarkedIndividual implements java.io.Serializable {
     encounters.add(enc);
     //dataFiles = new Vector();
     numberEncounters = 1;
-    if(enc.getSex()!=null){
-      this.sex = enc.getSex();
-    }
+    //if(enc.getSex()!=null){
+    //  this.sex = enc.getSex();
+    //}
     //numUnidentifiableEncounters = 0;
     setTaxonomyFromEncounters();
     setSexFromEncounters();
