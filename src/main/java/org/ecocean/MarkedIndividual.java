@@ -722,16 +722,17 @@ public class MarkedIndividual implements java.io.Serializable {
     /// therefore we dont allow that unless you pass boolean true to force it
     ///  TODO we only pick first one - perhaps smarter would be to check all encounters and pick dominant one?
     public String setTaxonomyFromEncounters(boolean force) {
-        if (!force && ((genus != null) || (specificEpithet != null))) return getTaxonomyString();
-        if ((encounters == null) || (encounters.size() < 1)) return getTaxonomyString();
-        for (Encounter enc : encounters) {
-            if ((enc.getGenus() != null) && (enc.getSpecificEpithet() != null)) {
-                genus = enc.getGenus();
-                specificEpithet = enc.getSpecificEpithet();
-                return getTaxonomyString();
-            }
-        }
-        return getTaxonomyString();
+      return getTaxonomyString();
+        //if (!force && ((genus != null) || (specificEpithet != null))) return getTaxonomyString();
+        //if ((encounters == null) || (encounters.size() < 1)) return getTaxonomyString();
+        //for (Encounter enc : encounters) {
+        //     if ((enc.getGenus() != null) && (enc.getSpecificEpithet() != null)) {
+        //         genus = enc.getGenus();
+        //         specificEpithet = enc.getSpecificEpithet();
+        //         return getTaxonomyString();
+        //     }
+        // }
+        //return getTaxonomyString();
     }
     public String setTaxonomyFromEncounters() {
         return setTaxonomyFromEncounters(false);
@@ -739,16 +740,18 @@ public class MarkedIndividual implements java.io.Serializable {
 
     //similar to above
     public String setSexFromEncounters(boolean force) {
-        if (!force && (sex != null)) return getSex();
-        if ((encounters == null) || (encounters.size() < 1)) return getSex();
-        for (Encounter enc : encounters) {
-            if (enc.getSex() != null) {
-                sex = enc.getSex();
-                return getSex();
-            }
-        }
-        return getSex();
+      return getSex();
+//        if (!force && (sex != null)) return getSex();
+//        if ((encounters == null) || (encounters.size() < 1)) return getSex();
+//        for (Encounter enc : encounters) {
+//            if (enc.getSex() != null) {
+//                sex = enc.getSex();
+//                return getSex();
+//            }
+//        }
+//        return getSex();
     }
+
     public String setSexFromEncounters() {
         return setSexFromEncounters(false);
     }
