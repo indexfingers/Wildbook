@@ -103,6 +103,7 @@ public class MediaAsset implements java.io.Serializable {
     protected String hashCode;
 
     protected String detectionStatus;
+    protected String iaDetectionErrorMessage;
     protected String identificationStatus;
 
     protected Double userLatitude;
@@ -207,6 +208,14 @@ public class MediaAsset implements java.io.Serializable {
       this.occurrence = occ;
     }
 
+    public void setIaDetectionErrorMessage(String msg) {
+      this.iaDetectionErrorMessage = msg;
+    }
+    
+    public String getIaDetectionErrorMessage() {
+      return this.iaDetectionErrorMessage;
+    }
+    
     public String getDetectionStatus() {
       return this.detectionStatus;
     }

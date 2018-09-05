@@ -158,6 +158,11 @@ public class Feature implements java.io.Serializable {
         this.revision = System.currentTimeMillis();
         return this.revision;
     }
+    
+    // used when want to synchronise revision times across features
+    public void setRevision(long rev) {
+      this.revision = rev;
+    }
 
 
 
