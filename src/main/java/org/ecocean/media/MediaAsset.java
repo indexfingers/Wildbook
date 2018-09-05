@@ -755,6 +755,7 @@ System.out.println("hashCode on " + this + " = " + this.hashCode);
                     Feature ft = fts.get(i);
                     jf.put("id", ft.getId());
                     jf.put("type", ft.getType());
+                    jf.put("revision",ft.getRevision());
                     JSONObject p = ft.getParameters();
                     if (p != null) jf.put("parameters", Util.toggleJSONObject(p));
                     jarr.put(jf);
@@ -917,7 +918,7 @@ System.out.println("hashCode on " + this + " = " + this.hashCode);
     public ArrayList<Keyword> getKeywords() {
         return keywords;
     }
-    
+
     public boolean hasKeyword(String keywordName){
       if(keywords!=null){
         int numKeywords=keywords.size();
@@ -926,10 +927,10 @@ System.out.println("hashCode on " + this + " = " + this.hashCode);
           if((kw.getIndexname().equals(keywordName))||(kw.getReadableName().equals(keywordName))){return true;}
         }
       }
-      
+
       return false;
     }
-    
+
     public boolean hasKeyword(Keyword key){
       if(keywords!=null){
         if(keywords.contains(key)){return true;}
