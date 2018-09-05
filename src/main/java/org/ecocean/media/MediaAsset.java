@@ -211,11 +211,11 @@ public class MediaAsset implements java.io.Serializable {
     public void setIaDetectionErrorMessage(String msg) {
       this.iaDetectionErrorMessage = msg;
     }
-    
+
     public String getIaDetectionErrorMessage() {
       return this.iaDetectionErrorMessage;
     }
-    
+
     public String getDetectionStatus() {
       return this.detectionStatus;
     }
@@ -749,6 +749,7 @@ System.out.println("hashCode on " + this + " = " + this.hashCode);
               org.datanucleus.api.rest.orgjson.JSONObject jobj, boolean fullAccess) throws org.datanucleus.api.rest.orgjson.JSONException {
               jobj.put("id", this.getId());
               jobj.put("uuid", this.getUUID());
+              jobj.put("detectionStatus", this.getDetectionStatus());
               jobj.remove("parametersAsString");
             //jobj.put("guid", "http://" + CommonConfiguration.getURLLocation(request) + "/api/org.ecocean.media.MediaAsset/" + id);
 

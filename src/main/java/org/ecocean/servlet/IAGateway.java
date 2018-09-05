@@ -399,6 +399,7 @@ System.out.println("[taskId=" + taskId + "] attempting passthru to " + url);
     if (j.optJSONObject("BenWhiteshark") != null) {
         res = BenWhiteshark.iaGateway(j.getJSONObject("BenWhiteshark"), request);
 
+
     } else if (j.optJSONArray("detect") != null) {
         ArrayList<MediaAsset> mas = new ArrayList<MediaAsset>();
         List<MediaAsset> needOccurrences = new ArrayList<MediaAsset>();
@@ -504,7 +505,7 @@ System.out.println("anns -> " + anns);
             JSONObject taskRes = new JSONObject();
             taskRes.put("taskId", annTaskId);
             JSONArray jids = new JSONArray();
-            jids.put(ann.getId());  //for now there is only one 
+            jids.put(ann.getId());  //for now there is only one
             taskRes.put("annotationIds", jids);
             try {
                 String baseUrl = CommonConfiguration.getServerURL(request, request.getContextPath());
@@ -580,7 +581,7 @@ System.out.println("anns -> " + anns);
         JSONObject taskRes = new JSONObject();
         taskRes.put("taskId", annTaskId);
         JSONArray jids = new JSONArray();
-        jids.put(ann.getId());  //for now there is only one 
+        jids.put(ann.getId());  //for now there is only one
         taskRes.put("annotationIds", jids);
         try {
             String baseUrl = CommonConfiguration.getServerURL(request, request.getContextPath());
@@ -654,7 +655,7 @@ System.out.println("anns -> " + anns);
                     }
                 }
             }
-            
+
             String url = CommonConfiguration.getProperty("IBEISIARestUrlDetectReview", "context0");
             if (url == null) throw new IOException("IBEISIARestUrlDetectionReview url not set");
             url += "?image_uuid=" + ilist.getJSONObject(offset).toString() + "&";
@@ -774,7 +775,7 @@ getOut = "(( " + url + " ))";
         Iterator it = c.iterator();
         while (it.hasNext()) {
             mas.add((MediaAsset)it.next());
-        }    
+        }
         query.closeAll();
         return mas;
     }
@@ -793,7 +794,7 @@ getOut = "(( " + url + " ))";
         Iterator it = c.iterator();
         while (it.hasNext()) {
             anns.add((Annotation)it.next());
-        }    
+        }
         query.closeAll();
         return anns;
     }
@@ -820,7 +821,7 @@ getOut = "(( " + url + " ))";
         JSONObject res = IBEISIA.getTaskResultsBasic(taskId, logs);
 //System.out.println("JSON_RESULT -> " + res.getJSONObject("_response").getJSONObject("response").getJSONObject("json_result").toString());
 //System.out.println("JSON_RESULT -> " + res.optJSONObject("_json_result"));
-        if ((res == null) || (res.optJSONObject("_json_result") == null) || 
+        if ((res == null) || (res.optJSONObject("_json_result") == null) ||
             (res.getJSONObject("_json_result").optJSONObject("inference_dict") == null) ||
             (res.getJSONObject("_json_result").getJSONObject("inference_dict").optJSONObject("annot_pair_dict") == null)) return;
         JSONArray rlist = res.getJSONObject("_json_result").getJSONObject("inference_dict").getJSONObject("annot_pair_dict").optJSONArray("review_pair_list");

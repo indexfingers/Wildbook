@@ -299,6 +299,15 @@ ids	scores
     }
 
     public static JSONObject iaGateway(JSONObject arg, HttpServletRequest request) {
+        // if features for single ma, will have jsonobject, not jsonarray, so wrap jsonobject in array
+        if (arg.optJSONObject("createFeatures2") != null) {
+          JSONArray benJar = new JSONArray();
+          benJar.put(arg.optJSONObject("createFeatures2"));
+          arg.remove("createFeatures2");
+          arg.put("createFeatures2", benJar);
+        }
+      
+      
         JSONObject res = new JSONObject("{\"success\": false, \"error\": \"unknown\"}");
         String context = ServletUtilities.getContext(request);
         Shepherd myShepherd = new Shepherd(context);
@@ -425,9 +434,10 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
                     res.put("featureId", ft.getId());
                 }
             }
+            
 
         } else if (arg.optJSONArray("createFeatures2") != null) {
-          
+
           JSONArray farr = arg.optJSONArray("createFeatures2");
           JSONArray responseArray = new JSONArray();
           boolean success = true;
@@ -435,22 +445,24 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
           for (int i = 0 ; i < farr.length() ; i++) {
               JSONObject maResponse = new JSONObject();
               long revision = -1;
-              
+
               if ((farr.optJSONObject(i) == null) || (farr.getJSONObject(i).optString("mediaAssetUuid") == null) || (farr.getJSONObject(i).optString("status") == null)) {
                 success = false;
+                res.put("error", "bad array element");
                 continue;  //bad array element!
               }
               maResponse.put("mediaAssetUuid", farr.getJSONObject(i).optString("mediaAssetUuid"));
               maResponse.put("success", true);
-              
+
               MediaAsset ma = MediaAssetFactory.loadByUuid(farr.getJSONObject(i).optString("mediaAssetUuid"), myShepherd);
               if (ma == null) {
                   maResponse.put("error", "invalid or unknown mediaAssetUuid passed");
                   maResponse.put("success", false);
                   success = false;
+                  res.put("error", "invalid or unknown mediaAssetUuid passed");
                   continue;
-              } 
-              
+              }
+
               if (!farr.getJSONObject(i).optString("status").equals("success")) {
                 maResponse.put("IAError", "IA Error");
                 maResponse.put("success", false);
@@ -458,9 +470,10 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
                 ma.setDetectionStatus(IBEISIA.STATUS_ERROR);
                 if (farr.getJSONObject(i).optString("errorMessage") != null) ma.setIaDetectionErrorMessage(farr.getJSONObject(i).optString("errorMessage"));
                 MediaAssetFactory.save(ma,myShepherd);
+                res.put("error", "IA Error");
                 continue; // to features for next ma
               }
-              
+
               // now the set of features for this ma / annotation
               JSONArray features = farr.optJSONObject(i).optJSONArray("features");
               JSONArray featIds = new JSONArray();
@@ -470,30 +483,32 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
                 success = false;
                 ma.setDetectionStatus(IBEISIA.STATUS_ERROR);
                 MediaAssetFactory.save(ma,myShepherd);
+                res.put("error", "no feeatures");
                 continue; // to features for next ma
               }
-              
+
               for (int k = 0; k < features.length(); k++) {
                 FeatureType.initAll(myShepherd);
-                
+
                 if ((features.optJSONObject(k).optString("type") == null) || (features.optJSONObject(k).optJSONObject("parameters") == null)) {
                   maResponse.put("error", "feature with no feature type or parameters");
                   maResponse.put("success", false);
                   ma.setDetectionStatus(IBEISIA.STATUS_ERROR);
                   success = false;
+                  res.put("error", "no feature type or parameters");
                   break;
                 }
                 // now assume we have parameters and feature type for this feature and for this media asset :-)
                 // now stick features in ma.. (all gonna be okay now?)
-                String tstring = features.optJSONObject(k).optString("type"); 
+                String tstring = features.optJSONObject(k).optString("type");
                 Feature ft = new Feature(tstring, features.optJSONObject(k).optJSONObject("parameters"));
-                
+
                 // store feature id with feature type and add to array of feature ids
                 JSONObject featId = new JSONObject();
                 featId.put("type", tstring);
                 featId.put("id",ft.getId());
                 featIds.put(featId);
-                
+
                 // synchronise revision time across features for given ma
                 if (revision == -1) {
                   revision = ft.getRevision();
@@ -503,9 +518,9 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
                 }
                 ma.removeFeaturesOfType(tstring);
                 ma.addFeature(ft);
-                
+
               }
-              
+
               // now all features added for this ma so add feature ids and then add response to array
               maResponse.put("featIds", featIds);
               responseArray.put(maResponse);
@@ -516,9 +531,9 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
               }
               MediaAssetFactory.save(ma,myShepherd);
           }
-          
+
           res.put("success", success);
-          res.remove("error");
+          if (success == true) res.remove("error");
           res.put("maResponses",responseArray);
         }else {
             res.put("error", "unknown command");
