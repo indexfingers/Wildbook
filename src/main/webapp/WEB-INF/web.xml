@@ -288,6 +288,16 @@
     <servlet-name>ImgSyncServlet1</servlet-name>
     <servlet-class>com.sunwesttek.image.servlet.ImgSyncServlet</servlet-class>
   </servlet>
+  
+    <servlet>
+    <servlet-name>SystemTimestamp</servlet-name>
+    <servlet-class>org.ecocean.servlet.SystemTimestamp</servlet-class>
+  </servlet>
+
+<servlet-mapping>
+  <servlet-name>SystemTimestamp</servlet-name>
+  <url-pattern>/SystemTimestamp</url-pattern>
+</servlet-mapping>
 
 
 
