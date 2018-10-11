@@ -42,9 +42,31 @@
     </repository>
   </repositories>
   
+  	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.amazonaws</groupId>
+				<artifactId>aws-java-sdk-bom</artifactId>
+				<version>1.11.123</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+  
   
 
   <dependencies>
+
+	<dependency>
+		<groupId>com.amazonaws</groupId>
+		<artifactId>aws-java-sdk-s3</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>com.amazonaws</groupId>
+		<artifactId>aws-java-sdk-sqs</artifactId>
+	</dependency>
+	
   
     <dependency>
         <groupId>com.healthmarketscience.jackcess</groupId>
@@ -102,12 +124,15 @@
         <artifactId>pac4j-oauth</artifactId>
         <version>1.7.0</version>
     </dependency>
+    
 
+<!--
 <dependency>
 	<groupId>com.amazonaws</groupId>
 	<artifactId>aws-java-sdk</artifactId>
 	<version>1.10.34</version>
 </dependency>
+-->
 
 
     <dependency>

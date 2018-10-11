@@ -1,6 +1,7 @@
 package org.ecocean.identity;
 
 import java.util.List;
+import java.util.UUID;
 import java.io.File;
 import java.io.IOException;
 import org.ecocean.Shepherd;
@@ -8,6 +9,7 @@ import org.ecocean.Encounter;
 import org.ecocean.Annotation;
 import org.ecocean.MarkedIndividual;
 import org.ecocean.Util;
+import org.ecocean.ia.Task;
 import org.ecocean.servlet.ServletUtilities;
 import org.ecocean.CommonConfiguration;
 import org.ecocean.media.MediaAsset;
@@ -47,7 +49,7 @@ import java.io.FileWriter;
 import java.io.BufferedWriter;
 import javax.jdo.Extent;
 import javax.jdo.Query;
-
+import org.ecocean.identity.BenWhitesharkPkg.SQStools;
 
 public class BenWhiteshark {
 //#BenWhitesharkJobStartDirectory = /efs/job/start
@@ -299,15 +301,7 @@ ids	scores
     }
 
     public static JSONObject iaGateway(JSONObject arg, HttpServletRequest request) {
-        // if features for single ma, will have jsonobject, not jsonarray, so wrap jsonobject in array
-        if (arg.optJSONObject("createFeatures2") != null) {
-          JSONArray benJar = new JSONArray();
-          benJar.put(arg.optJSONObject("createFeatures2"));
-          arg.remove("createFeatures2");
-          arg.put("createFeatures2", benJar);
-        }
-      
-      
+ 
         JSONObject res = new JSONObject("{\"success\": false, \"error\": \"unknown\"}");
         String context = ServletUtilities.getContext(request);
         Shepherd myShepherd = new Shepherd(context);
@@ -436,21 +430,43 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
             }
             
 
-        } else if (arg.optJSONArray("createFeatures2") != null) {
-
-          JSONArray farr = arg.optJSONArray("createFeatures2");
+        } else if (arg.optJSONObject("createFeatures2") != null) {
+          
+          //TODO - deal with different task types - if detect_identify type, kick off identification...
+          
+          JSONObject cf = arg.optJSONObject("createFeatures2");
+          //JSONArray farr = arg.optJSONArray("createFeatures2");
           JSONArray responseArray = new JSONArray();
           boolean success = true;
           
+          if((cf.optString("taskId")==null || cf.optString("taskType") == null))
+              res.put("warning", "no task id or no task type");
+          
+          if((cf.optJSONObject("mediaAssets") == null) && (cf.optJSONArray("mediaAssets")==null)) {
+            success = false;
+            res.put("error", "no features");
+            return res;
+          }
+          
+          // if features for single ma, will have jsonobject, not jsonarray, so wrap jsonobject in array
+          if(cf.optJSONObject("mediaAssets") != null) {
+            JSONArray benJar = new JSONArray();
+            benJar.put(cf.optJSONObject("mediaAssets"));
+            cf.remove("mediaAssets");
+            cf.put("mediaAssets", benJar);
+          }
+          
+          JSONArray farr = cf.getJSONArray("mediaAssets");
+          
           for (int i = 0 ; i < farr.length() ; i++) {
               JSONObject maResponse = new JSONObject();
-              long revision = -1;
 
               if ((farr.optJSONObject(i) == null) || (farr.getJSONObject(i).optString("mediaAssetUuid") == null) || (farr.getJSONObject(i).optString("status") == null)) {
                 success = false;
                 res.put("error", "bad array element");
                 continue;  //bad array element!
               }
+              
               maResponse.put("mediaAssetUuid", farr.getJSONObject(i).optString("mediaAssetUuid"));
               maResponse.put("success", true);
 
@@ -490,18 +506,19 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
               for (int k = 0; k < features.length(); k++) {
                 FeatureType.initAll(myShepherd);
 
-                if ((features.optJSONObject(k).optString("type") == null) || (features.optJSONObject(k).optJSONObject("parameters") == null)) {
-                  maResponse.put("error", "feature with no feature type or parameters");
+                if ((features.optJSONObject(k).optString("type") == null) || (features.optJSONObject(k).optJSONObject("parameters") == null) || (features.optJSONObject(k).optString("revision") == null)) {
+                  maResponse.put("error", "feature with no feature type or no parameters or no revision");
                   maResponse.put("success", false);
                   ma.setDetectionStatus(IBEISIA.STATUS_ERROR);
                   success = false;
-                  res.put("error", "no feature type or parameters");
+                  res.put("error", "no feature type or parameters or revision");
                   break;
                 }
                 // now assume we have parameters and feature type for this feature and for this media asset :-)
                 // now stick features in ma.. (all gonna be okay now?)
                 String tstring = features.optJSONObject(k).optString("type");
                 Feature ft = new Feature(tstring, features.optJSONObject(k).optJSONObject("parameters"));
+                ft.setRevision(Long.parseLong(features.optJSONObject(k).optString("revision")));
 
                 // store feature id with feature type and add to array of feature ids
                 JSONObject featId = new JSONObject();
@@ -509,16 +526,8 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
                 featId.put("id",ft.getId());
                 featIds.put(featId);
 
-                // synchronise revision time across features for given ma
-                if (revision == -1) {
-                  revision = ft.getRevision();
-                  maResponse.put("revision", revision);
-                } else {
-                  ft.setRevision(revision);
-                }
                 ma.removeFeaturesOfType(tstring);
                 ma.addFeature(ft);
-
               }
 
               // now all features added for this ma so add feature ids and then add response to array
@@ -530,7 +539,16 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
                 ma.setDetectionStatus(IBEISIA.STATUS_ERROR);
               }
               MediaAssetFactory.save(ma,myShepherd);
+              
+              // update annotation.revision
+              //Annotation ann = loadAnnotationById(farr.getJSONObject(i).optString("annotationUuid"), myShepherd);
+//              if(farr.getJSONObject(i).optString("revision") != null) {
+//                Annotation ann = ma.getAnnotations().get(0);
+//                ann.setRevision(Long.parseLong(farr.getJSONObject(i).optString("revision")));
+//                myShepherd.getPM().makePersistent(ann);
+//              }
           }
+          
 
           res.put("success", success);
           if (success == true) res.remove("error");
@@ -540,7 +558,118 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
         }
         return res;
     }
+    
+    
+//    private static Annotation loadAnnotationById(final String uuid, Shepherd myShepherd) {
+//      Query query = myShepherd.getPM().newQuery(Annotation.class);
+//      query.setFilter("id=='" + uuid + "'");
+//      List results = (List)query.execute();
+//      //uuid column is constrained unique, so should always get 0 or 1
+//      if (results.size() < 1) return null;
+//      return (Annotation)results.get(0);
+//  }
 
+    
+    public static ArrayList<Task> intakeMediaAssets(Shepherd myShepherd, ArrayList<MediaAsset> mas, String taskType, boolean priority) {
+      if ((mas == null) || (mas.size() < 1)) return null;
+      ArrayList<Task> tasks = new ArrayList<Task>();
+      for (MediaAsset ma : mas) {
+        tasks.add(intakeMediaAsset(myShepherd, ma, taskType, priority));
+      }
+      return tasks;
+    }
+    
+    public static ArrayList<Task> intakeMediaAssets(Shepherd myShepherd, ArrayList<MediaAsset> mas, String taskType) {
+      return intakeMediaAssets(myShepherd,mas, taskType, false);
+    }
+    
+
+      
+      public static Task intakeMediaAsset(Shepherd myShepherd, MediaAsset ma, String taskType, boolean priority) {
+        
+        // need to add in part where it says if identification job or not - TICK
+        // also need to write python code to automatically shutdown server and do status
+        Task task = new Task();
+        if (ma == null) return task;
+        ArrayList<MediaAsset> maList = new ArrayList<MediaAsset>();
+        maList.add(ma);
+        task.setObjectMediaAssets(maList);
+        JSONObject qjob = new JSONObject();
+        qjob.put("taskType", taskType);
+        qjob.put("mediaAssets", convertMaToJson(ma));
+        qjob.put("taskId",task.getId());
+        qjob.put("__context",myShepherd.getContext());
+    
+        //qjob.put("__baseUrl", getBaseUrl(context));
+        
+        ma.setDetectionStatus(IBEISIA.STATUS_PROCESSING);
+        MediaAssetFactory.save(ma,myShepherd);
+        
+        JSONArray destArr = new JSONArray();
+        String queueUrl = null;
+        if(priority) {
+          queueUrl = "https://sqs.eu-west-1.amazonaws.com/822200170788/toDetectPriority.fifo";
+          destArr.put(makeSqsDest("https://sqs.eu-west-1.amazonaws.com/822200170788/toRefinePriority.fifo"));
+        }else {
+          destArr.put(makeSqsDest("https://sqs.eu-west-1.amazonaws.com/822200170788/toRefine.fifo"));
+          queueUrl = "https://sqs.eu-west-1.amazonaws.com/822200170788/toDetect.fifo";
+        }
+        destArr.put(makePostDest("http://ec2-34-241-222-21.eu-west-1.compute.amazonaws.com/ia"));
+        
+        qjob.put("destinationSequence", destArr);
+        
+        SQStools sqs_tools = new SQStools();
+        sqs_tools.initialiseCredentials();
+        sqs_tools.initialiseSqs();
+
+        sqs_tools.sendMessage(queueUrl, qjob.toString(),
+            UUID.randomUUID().toString());
+        
+        return task;
+      }
+      
+      private static JSONObject makePostDest(String url) {
+        JSONObject dest = new JSONObject();
+        dest.put("type", "post");
+        JSONObject params = new JSONObject();
+        params.put("url", url);
+        dest.put("params", params);
+        return dest;
+        
+      }
+      
+      
+      private static JSONObject makeSqsDest(String queueUrl) {
+        JSONObject dest = new JSONObject();
+        dest.put("type", "sqs");
+        JSONObject params = new JSONObject();
+        params.put("queueUrl", queueUrl);
+        dest.put("params", params);
+        return dest;
+      }
+      
+
+      
+      private static JSONObject convertMaToJson(MediaAsset ma) {
+        JSONObject jma = new JSONObject();
+        jma.put("uuid", ma.getUUID());
+        jma.put("id", ma.getId());
+        jma.put("annotationUuid", ma.getAnnotations().get(0).getUUID());
+        
+        JSONObject jmaStore = new JSONObject();
+        jmaStore.put("type", "url");
+        
+        JSONObject jmaStoreParams = new JSONObject();
+        jmaStoreParams.put("url", ma.webURLString());
+        
+        jmaStore.put("params",jmaStoreParams);
+        jma.put("store", jmaStore);
+        return jma;
+      }
+     
+
+    
+    
     private static String getUrlForMediaAssetUUID(String uuid, Shepherd myShepherd) {
         MediaAsset ma = MediaAssetFactory.loadByUuid(uuid, myShepherd);
         if (ma == null) return null;

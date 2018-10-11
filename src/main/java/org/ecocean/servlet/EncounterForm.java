@@ -48,6 +48,7 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.ecocean.CommonConfiguration;
 import org.ecocean.Util;
+import org.ecocean.ia.Task;
 import org.ecocean.Encounter;
 import org.ecocean.Measurement;
 import org.ecocean.Shepherd;
@@ -1009,7 +1010,10 @@ System.out.println("depth --> " + fv.get("depth").toString());
                 newnum = myShepherd.storeNewEncounter(enc, encID);
                 //enc.refreshAssetFormats(context, ServletUtilities.dataDir(context, rootDir));
                 enc.refreshAssetFormats(myShepherd);
-
+                
+                // maybe persist these at some point...?
+                ArrayList<Task> tasks = org.ecocean.identity.BenWhiteshark.intakeMediaAssets(myShepherd, enc.getMedia(), "detect");
+                
                 Logger log = LoggerFactory.getLogger(EncounterForm.class);
                 log.info("New encounter submission: <a href=\"http://" + CommonConfiguration.getURLLocation(request) + "/encounters/encounter.jsp?number=" + encID+"\">"+encID+"</a>");
 System.out.println("ENCOUNTER SAVED???? newnum=" + newnum);
