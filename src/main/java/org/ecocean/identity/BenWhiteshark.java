@@ -49,6 +49,8 @@ import java.io.FileWriter;
 import java.io.BufferedWriter;
 import javax.jdo.Extent;
 import javax.jdo.Query;
+
+import org.ecocean.identity.BenWhitesharkPkg.Ec2Tools;
 import org.ecocean.identity.BenWhitesharkPkg.SQStools;
 
 public class BenWhiteshark {
@@ -572,6 +574,17 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
     
     public static ArrayList<Task> intakeMediaAssets(Shepherd myShepherd, ArrayList<MediaAsset> mas, String taskType, boolean priority) {
       if ((mas == null) || (mas.size() < 1)) return null;
+      // try to start detection servers
+      if (checkStartOdServer(CommonConfiguration.getProperty("finDetectInstanceId", "context0")) == false) {
+        System.out.println("issue starting detection server");
+        return null;
+      }
+      
+      if (checkStartOdServer(CommonConfiguration.getProperty("finRefineInstanceId", "context0"),CommonConfiguration.getProperty("spareFinRefineInstanceId", "context0")) == false) {
+        System.out.println("issue starting fin refine server");
+        return null;
+      }
+      //if (checkStartOdServer("i-04fbed57be6d86850") == false) return null;
       ArrayList<Task> tasks = new ArrayList<Task>();
       for (MediaAsset ma : mas) {
         tasks.add(intakeMediaAsset(myShepherd, ma, taskType, priority));
@@ -583,6 +596,79 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
       return intakeMediaAssets(myShepherd,mas, taskType, false);
     }
     
+    
+    
+    public static boolean checkStartOdServer(String instanceId, String spareInstanceId) {
+      boolean success = true;
+      Ec2Tools ec2_tools = new Ec2Tools();
+      ec2_tools.initialiseCredentials();
+      ec2_tools.initialiseEc2();
+      String status = ec2_tools.getInstanceStatusWithInstanceId(instanceId);
+      if (status.equals("stopping")) {
+        return checkStartOdServer(spareInstanceId);
+      }
+      if ((status.equals("running")) || (status.equals("pending"))) {
+        return success;
+      }
+      String statusSpare = ec2_tools.getInstanceStatusWithInstanceId(spareInstanceId);
+      if ((statusSpare.equals("running")) || (statusSpare.equals("pending"))) {
+        return success;
+      }
+      if (status.equals("stopped")) {
+        try {
+          ec2_tools.startOdInstance(instanceId);
+        } catch (Exception ex) {
+          return false;
+        }
+        return success;
+      }
+      return false;
+    }
+    
+  public static boolean checkStartOdServer(String instanceId) {
+    boolean success = true;
+    Ec2Tools ec2_tools = new Ec2Tools();
+    ec2_tools.initialiseCredentials();
+    ec2_tools.initialiseEc2();
+    String status = ec2_tools.getInstanceStatusWithInstanceId(instanceId);
+    if ((status.equals("running")) || (status.equals("pending"))) {
+      return success;
+    }
+    if (status.equals("stopped")) {
+      try {
+        ec2_tools.startOdInstance(instanceId);
+      } catch (Exception ex) {
+        return false;
+      }
+      return success;
+    }
+    if (status.equals("stopping")) {
+      int count = 0;
+      while (status.equals("stopping")) {
+        try {
+          Thread.sleep(5000);
+        } catch (InterruptedException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
+        status = ec2_tools.getInstanceStatusWithInstanceId(instanceId);
+        count = count + 1;
+        if (count == 20) {
+          break;
+        }
+      }
+    }
+
+    if (status.equals("stopped")) {
+      try {
+        ec2_tools.startOdInstance(instanceId);
+      } catch (Exception ex) {
+        return false;
+      }
+      return success;
+    }
+    return false;
+  }
 
       
       public static Task intakeMediaAsset(Shepherd myShepherd, MediaAsset ma, String taskType, boolean priority) {
@@ -591,6 +677,15 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
         // also need to write python code to automatically shutdown server and do status
         Task task = new Task();
         if (ma == null) return task;
+        if (checkStartOdServer(CommonConfiguration.getProperty("finDetectInstanceId", "context0")) == false) {
+          System.out.println("issue starting detection server");
+          return task;
+        }
+        if (checkStartOdServer(CommonConfiguration.getProperty("finRefineInstanceId", "context0"),CommonConfiguration.getProperty("spareFinRefineInstanceId", "context0")) == false) {
+          System.out.println("issue starting fin refine server");
+          return task;
+        }
+        
         ArrayList<MediaAsset> maList = new ArrayList<MediaAsset>();
         maList.add(ma);
         task.setObjectMediaAssets(maList);
@@ -608,13 +703,13 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
         JSONArray destArr = new JSONArray();
         String queueUrl = null;
         if(priority) {
-          queueUrl = "https://sqs.eu-west-1.amazonaws.com/822200170788/toDetectPriority.fifo";
-          destArr.put(makeSqsDest("https://sqs.eu-west-1.amazonaws.com/822200170788/toRefinePriority.fifo"));
+          queueUrl = CommonConfiguration.getProperty("finDetectQueueUrlPriority", "context0");
+          destArr.put(makeSqsDest(CommonConfiguration.getProperty("finRefineQueueUrlPriority", "context0")));
         }else {
-          destArr.put(makeSqsDest("https://sqs.eu-west-1.amazonaws.com/822200170788/toRefine.fifo"));
-          queueUrl = "https://sqs.eu-west-1.amazonaws.com/822200170788/toDetect.fifo";
+          queueUrl = CommonConfiguration.getProperty("finDetectQueueUrl", "context0");
+          destArr.put(makeSqsDest(CommonConfiguration.getProperty("finRefineQueueUrl", "context0")));
         }
-        destArr.put(makePostDest("http://ec2-34-241-222-21.eu-west-1.compute.amazonaws.com/ia"));
+        destArr.put(makePostDest(CommonConfiguration.getProperty("iaPostUrl", "context0")));
         
         qjob.put("destinationSequence", destArr);
         
@@ -624,6 +719,11 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
 
         sqs_tools.sendMessage(queueUrl, qjob.toString(),
             UUID.randomUUID().toString());
+        
+        if (checkStartOdServer(CommonConfiguration.getProperty("finDetectInstanceId", "context0")) == false) {
+          System.out.println("issue starting detection server");
+          return task;
+        }
         
         return task;
       }

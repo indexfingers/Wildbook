@@ -66,6 +66,14 @@
 		<groupId>com.amazonaws</groupId>
 		<artifactId>aws-java-sdk-sqs</artifactId>
 	</dependency>
+	<dependency>
+		<groupId>com.amazonaws</groupId>
+		<artifactId>aws-java-sdk-ec2</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>com.amazonaws</groupId>
+		<artifactId>aws-java-sdk-ssm</artifactId>
+	</dependency>
 	
   
     <dependency>
@@ -345,14 +353,18 @@
     </dependency>
 
     <!-- starting Amazon support for sharkGrid -->
-    <dependency>
+    <!--   <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-ec2</artifactId>
       <version>1.10.53</version>
+      </dependency>
+        -->
+      
 <!--
       <version>1.9.13</version>
 -->
-    </dependency>
+    
+  
 
     <dependency>
       <groupId>net.sourceforge.jwebunit</groupId>
