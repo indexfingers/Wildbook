@@ -301,6 +301,82 @@ ids	scores
         }
         return matches;
     }
+    
+    public static JSONObject resultsAsJSONObject(JSONObject idRes) {
+      // here we want to output a jsonobject.
+      // each 'key' is the query media asset uuid
+      // each 'value' is a jsonarray. Each element of the array is a string array
+      // of length 3 with values [<id> <score> <refMAUuid>]
+      
+      // if there is a general failure, the 'key' is 'error' and the value is whatever (an error message)
+      
+      // if there is a failure for specific query ma, the key is the query ma uuid, and the value is a 
+      // string -  any old string perhaps, but we can make it an error message...
+      // the question is, downstream, how do we know this string represents an error? I think this is because
+      // when there's not an error, the value associated to this key is a jsonarray, not a string
+      if (idRes == null) return null;
+      JSONObject matches = new JSONObject();
+      if (!idRes.optString("status").equals("success")) {
+          matches.put("error", idRes.optString("errorMessage"));
+          return matches;
+      }
+      // if json object, (one result), wrap as array
+      JSONArray resArr = new JSONArray();
+      if (idRes.optJSONObject("results")!=null) {
+        resArr.put(idRes.optJSONObject("results"));
+      } else if (idRes.optJSONArray("results")==null){
+        matches.put("error", "malformed request");
+        return matches;
+      } else {
+        resArr = idRes.optJSONArray("results");
+      }
+      // r is a set of matches for one query image
+      JSONObject r = new JSONObject();
+      for (int i = 0 ; i < resArr.length() ; i++) {
+        r = resArr.optJSONObject(i);
+        // rowArr is an array to store the matches for current query
+        JSONArray rowArr = new JSONArray();
+        // can't do anything if no result or no query image... shouldn't happen
+        if ((r == null) || (r.optString("queryMediaAssetUuid")==null)) {
+          continue;
+        }
+        if (r.optString("status")==null) {
+          matches.put(r.optString("queryMediaAssetUuid"), "error - no status");
+          continue;
+        }
+        if (!r.optString("status").equals("success")) {
+          matches.put(r.optString("queryMediaAssetUuid"), "error - " + r.optString("errorMessage"));
+          continue;
+        }
+        // a malformed result - put error for this query
+        if ((r.optJSONArray("ids") == null) || (r.optJSONArray("scores") == null) || (r.optJSONArray("referenceMediaAssetUuids"))==null) {
+          // special case where one image returned for this query
+          if (r.optString("ids")!=null) {
+              // if no scores or reference images - put error for this query
+              if ( (r.optString("scores") == null) || (r.optString("referenceMediaAssetUuids"))==null ) {
+                matches.put(r.optString("queryMediaAssetUuid"), "error - either no scores or reference mas for this query");
+                continue;
+              }
+              JSONArray row  = new JSONArray(); row.put(0, r.optString("ids"));row.put(1, r.optString("scores"));
+              row.put(2, r.optString("referenceMediaAssetUuids"));
+              rowArr.put(row);
+              matches.put(r.optString("queryMediaAssetUuid"), rowArr);
+              continue;
+            }
+          matches.put(r.optString("queryMediaAssetUuid"), "error - malformed result for this query");
+          continue;
+        }
+        for (int j = 0 ; j < r.optJSONArray("ids").length() ; j++) {
+          JSONArray row  = new JSONArray(); row.put(0, r.optJSONArray("ids").getString(j));row.put(1, r.optJSONArray("scores").get(j).toString());
+          row.put(2, r.optJSONArray("referenceMediaAssetUuids").getString(j));
+          rowArr.put(j, row);
+        }
+        matches.put(r.optString("queryMediaAssetUuid"), rowArr);
+      }
+      return matches;
+  }
+    
+    
 
     public static JSONObject iaGateway(JSONObject arg, HttpServletRequest request) {
  
@@ -408,8 +484,53 @@ System.out.println("[" + key + "] indivId ==> " + indivId);
                 }
             }
             res.put("matchImages", tarr);
+            
 */
+        } else if (arg.optJSONObject("saveIdentificationResults") != null) {
+          JSONObject idResults = arg.optJSONObject("saveIdentificationResults");
+          if ((idResults.optString("taskId") == null) || (idResults.optString("status") == null)) {
+            res.put("error", "malformed request - either no taskId or status");
+            return res;
+          } 
+          String taskId = idResults.getString("taskId");
+          res.put("taskId", taskId);
+          ArrayList<IdentityServiceLog> logs = IdentityServiceLog.loadByTaskID(taskId, SERVICE_NAME, myShepherd);
+          if ((logs == null) || (logs.size() < 1)) {
+              res.put("error", "unknown taskId=" + taskId);
+              return res;
+          }
+          JSONObject matches = resultsAsJSONObject(idResults);
+          boolean isError = false;
+          if (matches == null) {
+            res.put("error", "no results for taskId=" + taskId);
+            isError = true;
+          }
+          if (matches.opt("error") != null) {  //general failure!
+             res.put("error", matches.get("error"));
+             isError = true;
+          }
 
+          String[] ids = null;
+          if (isError == false) {
+            res.put("success", true);  
+            res.remove("error");
+            ArrayList<String> keyArr = new ArrayList<String>();
+            Iterator kit = matches.keys();
+            while (kit.hasNext()) {
+              keyArr.add((String)kit.next());
+            }
+            ids = new String[keyArr.size()];
+            keyArr.toArray(ids);
+          }
+
+          JSONObject jlog = new JSONObject();
+          jlog.put("results", matches);
+          IdentityServiceLog log = new IdentityServiceLog(taskId, ids, SERVICE_NAME, null, jlog);
+          log.save(myShepherd);
+          
+          return res;
+          
+          
         //TODO should we have "add" vs "create" ?   for now we are assuming always only one.  replace-if-exists-else-create
         } else if (arg.optJSONArray("createFeatures") != null) {
             JSONArray farr = arg.optJSONArray("createFeatures");
