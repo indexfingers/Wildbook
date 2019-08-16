@@ -306,7 +306,7 @@ public class Collaboration implements java.io.Serializable {
 		}
 	}
 
-	// here "View" is a weaker action than "Access". 
+	// here "View" is a weaker action than "Access".
 	// "View" means "you can see that the data exists but may not necessarily access the data"
 	public static boolean canUserViewOwnedObject(String ownerName, HttpServletRequest request, Shepherd myShepherd) {
 		if (request.isUserInRole("admin")) return true;  //TODO generalize and/or allow other roles all-access
@@ -320,9 +320,9 @@ public class Collaboration implements java.io.Serializable {
 		// if they own it
 		if (viewer.getUUID()!=null && viewer.getUUID().equals(owner.getUUID())) return true; // should really be user .equals() method
 		// if viewer and owner have sharing turned on
-		if (((viewer!=null && 
-				viewer.hasSharing() && 
-				(owner==null || owner.hasSharing())) )) return true; // just based on sharing
+		//if (((viewer!=null &&
+		//		viewer.hasSharing() &&
+		//		(owner==null || owner.hasSharing())) )) return true; // just based on sharing
 		// if they have a collaboration
 		return canCollaborate(viewer, owner, ServletUtilities.getContext(request));
 	}
