@@ -15,6 +15,7 @@
          org.ecocean.Util.*, org.ecocean.genetics.*,
          org.ecocean.tag.*, java.awt.Dimension,
          org.json.JSONObject,
+         org.json.JSONArray,
          javax.jdo.Extent, javax.jdo.Query,
          java.io.File, java.text.DecimalFormat,
          java.util.*,org.ecocean.security.Collaboration" %>
@@ -22,6 +23,44 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
 <%!
+    //note: locIds is modified, such that it contains all the IDs we traversed
+    private static String traverseLocationIdTree(final JSONObject locIdTree, List<String> locIds, final String encLocationId, final Map<String,Long> locCount) {
+        String rtn = "";
+        if (locIdTree == null) return rtn;  //snh
+
+        boolean isRoot = locIdTree.optBoolean("_isRoot", false);
+        String id = locIdTree.optString("id", null);
+        if (!isRoot && (id == null)) throw new RuntimeException("LocationID tree is missing IDs in sub-tree: " + locIdTree);
+        if (id != null) {
+            if (!locIds.contains(id)) locIds.add(id);
+            boolean active = id.equals(encLocationId);
+            long ct = 0;
+            if (locCount.get(id) != null) ct = locCount.get(id);
+            String name = locIdTree.optString("name", id);
+            String desc = locIdTree.optString("description", null);
+            if (desc == null) {
+                desc = "";
+            } else {
+                desc = " title=\"" + desc.replaceAll("'", "\\'") + "\" ";
+            }
+            rtn += "<li class=\"item\">";
+            rtn += "<input id=\"mfl-" + id + "\" name=\"match-filter-location-id\" value=\"" + id + "\" type=\"checkbox\"" + (active ? " checked " : "") + " />";
+            rtn += "<label " + desc + (active ? "class=\"item-checked\"" : "") + " for=\"mfl-" + id + "\">" + name + " <span class=\"item-count\">" + ct + "</span></label>";
+        }
+
+        List<String> kidVals = new ArrayList<String>();
+        JSONArray kids = locIdTree.optJSONArray("locationID");
+        if (kids != null) for (int i = 0 ; i < kids.length() ; i++) {
+            JSONObject k = kids.optJSONObject(i);
+            if (k == null) continue;
+            String kval = traverseLocationIdTree(k, locIds, encLocationId, locCount);
+            if (!kval.equals("")) kidVals.add(kval);
+        }
+        if (kidVals.size() > 0) rtn += "<ul class=\"ul-secondary\">" + String.join("\n", kidVals) + "</ul>";
+
+        if (id != null) rtn += "</li>";
+        return rtn;
+    }
 
   //shepherd must have an open trasnaction when passed in
   public String getNextIndividualNumber(Encounter enc, Shepherd myShepherd, String context) {
@@ -145,8 +184,6 @@ String langCode=ServletUtilities.getLanguageCode(request);
   boolean haveRendered = false;
 
   
-  Properties encprops = ShepherdProperties.getOrgProperties("encounter.properties", langCode, context, request);
-  pageContext.setAttribute("set", encprops.getProperty("set"));
 
   Properties collabProps = new Properties();
   collabProps=ShepherdProperties.getProperties("collaboration.properties", langCode, context);
@@ -174,10 +211,22 @@ String langCode=ServletUtilities.getLanguageCode(request);
     border: solid 5px #888;
     background-color: #CCC;
 }
+
+/* may the css gods help us.   h/t https://stackoverflow.com/a/7785711 */
+/*
+.ia-match-filter-dialog .option-cols ul.ul-secondary {
+    margin: 0;
+    -webkit-column-break-inside: avoid; /* Chrome, Safari */
+    page-break-inside: avoid;           /* Theoretically FF 20+ */
+    break-inside: avoid-column;         /* IE 11 */
+    display:table;                      /* Actually FF 20+ */
+}
+*/
+
 .ia-match-filter-dialog .option-cols {
-    -webkit-column-count: 5;
-    -moz-column-count: 5;
-    column-count: 5;
+    -webkit-column-count: 1;
+    -moz-column-count: 1;
+    column-count: 1;
 }
 .ia-match-filter-dialog .option-cols input {
     vertical-align: top;
@@ -197,6 +246,17 @@ String langCode=ServletUtilities.getLanguageCode(request);
 }
 .ia-match-filter-dialog .option-cols .item-checked label {
     font-weight: bold;
+}
+.ia-match-filter-dialog ul {
+    list-style-type: none;
+}
+label.item-checked {
+    font-weight: bold !important;
+}
+.ia-match-filter-dialog .item-count {
+    font-size: 0.8em;
+    color: #777;
+    margin-left: 9px;
 }
 .ia-match-filter-section {
     margin-top: 10px;
@@ -355,8 +415,10 @@ function setIndivAutocomplete(el) {
     if (!el || !el.length) return;
     var args = {
         resMap: function(data) {
+            var taxString = $('#displayTax').text();
             var res = $.map(data, function(item) {
                 if (item.type != 'individual') return null;
+                if (taxString && (item.species != taxString)) return null;
                 var label = item.label;
                 if (item.species) label += '   ( ' + item.species + ' )';
                 return { label: label, type: item.type, value: item.value };
@@ -492,13 +554,18 @@ var encounterNumber = '<%=num%>';
 
 			<%
   			myShepherd.beginDBTransaction();
+			Properties encprops = ShepherdProperties.getOrgProperties("encounter.properties", langCode, context, request, myShepherd);
+			pageContext.setAttribute("set", encprops.getProperty("set"));
+
+			boolean useCustomProperties = User.hasCustomProperties(request, myShepherd); // don't want to call this a bunch
+
 
   			if (myShepherd.isEncounter(num)) {
     			try {
 
       			Encounter enc = myShepherd.getEncounter(num);
-            System.out.println("Got encounter "+enc+" with dataSource "+enc.getDataSource()+" and submittedDate "+enc.getDWCDateAdded());
-            String encNum = enc.getCatalogNumber();
+            	System.out.println("Got encounter "+enc+" with dataSource "+enc.getDataSource()+" and submittedDate "+enc.getDWCDateAdded());
+            	String encNum = enc.getCatalogNumber();
 						boolean visible = enc.canUserAccess(request);
 						if (!visible) visible = checkAccessKey(request, enc);
 						if (!visible) {
@@ -774,7 +841,24 @@ if(enc.getLocation()!=null){
 
 <a href="<%=CommonConfiguration.getWikiLocation(context)%>locationID" target="_blank"><img
     src="../images/information_icon_svg.gif" alt="Help" border="0" align="absmiddle"></a>
-<em><%=encprops.getProperty("locationID") %></em><span> <span id="displayLocationID"><%=enc.getLocationCode()%></span></span>
+<em><%=encprops.getProperty("locationID") %></em>
+<span> 
+	<span id="displayLocationID">
+	<%
+    String qualifier=ShepherdProperties.getOverwriteStringForUser(request,myShepherd);
+    if(qualifier==null) {qualifier="default";}
+    else{qualifier=qualifier.replaceAll(".properties","");}
+	List<String> hier=LocationID.getIDForChildAndParents(enc.getLocationID(), null);
+	int sizeHier=hier.size();
+	String displayPath="";
+	for(int q=0;q<sizeHier;q++){
+		if(q==0){displayPath+=LocationID.getNameForLocationID(hier.get(q),null);}
+		else{displayPath+=" &rarr; "+LocationID.getNameForLocationID(hier.get(q),null);}
+	}
+	%>
+		<%=displayPath %>	
+	</span>
+</span>
 
 <br>
 
@@ -900,6 +984,7 @@ if(enc.getLocation()!=null){
       $("#countryError, #countryCheck, #countryErrorDiv").hide()
       $("#countryFormBtn").show();
     });
+
   });
 </script>
 
@@ -917,13 +1002,21 @@ if(enc.getLocation()!=null){
           <option value=""></option>
 
           <%
-          String[] locales = Locale.getISOCountries();
-          for (String countryCode : locales) {
-            Locale obj = new Locale("", countryCode);
-            %>
-            <option value="<%=obj.getDisplayCountry() %>"><%=obj.getDisplayCountry() %></option>
-
-            <%
+          if (useCustomProperties) {
+            List<String> countries = CommonConfiguration.getIndexedPropertyValues("country",request);
+            for (String country: countries) {
+              %>
+              <option value="<%=country%>"><%=country%></option>
+              <%
+            }
+          } else {
+            String[] locales = Locale.getISOCountries();
+            for (String countryCode : locales) {
+              Locale obj = new Locale("", countryCode);
+              %>
+              <option value="<%=obj.getDisplayCountry() %>"><%=obj.getDisplayCountry() %></option>
+              <%
+            }
           }
           %>
         </select>
@@ -950,10 +1043,10 @@ if(enc.getLocation()!=null){
       var code = $("#selectCode").val();
 
       $.post("../EncounterSetLocationID", {"number": number, "code": code},
-      function() {
+      function(response) {
         $("#locationIDerrorDiv").hide();
         $("#locationIDcheck").show();
-        $("#displayLocationID").html(code);
+        $("#displayLocationID").html(response.name);
       })
       .fail(function(response) {
         $("#locationIDerror, #locationIDerrorDiv").show();
@@ -976,50 +1069,11 @@ if(enc.getLocation()!=null){
     <input name="number" type="hidden" value="<%=num%>" id="locationIDnumber"/>
     <input name="action" type="hidden" value="addLocCode" />
 
-        <%
-        if(CommonConfiguration.getProperty("locationID0",context)==null){
-        %>
-        <div class="form-group row">
-          <div class="col-sm-5">
-            <input name="code" type="text" class="form-control" id="selectCode"/>
-          </div>
-          <div class="col-sm-3">
-            <input name="Set Location ID" type="submit" id="setLocationBtn" value="<%=encprops.getProperty("setLocationID")%>" class="btn btn-sm"/>
-          </div>
-        </div>
-        <%
-        }
-        else{
-          //iterate and find the locationID options
-          %>
           <div class="form-group row">
             <div class="col-sm-5">
-              <select name="code" id="selectCode" class="form-control" size=="1">
-                <option value=""></option>
 
-                <%
-                boolean hasMoreLocs=true;
-                int codeTaxNum=0;
-                while(hasMoreLocs){
-                  String currentLoc = "locationID"+codeTaxNum;
-                  if(CommonConfiguration.getProperty(currentLoc,context)!=null){
-                	  String selected="";
-                	  if((enc.getLocationID()!=null)&&(CommonConfiguration.getProperty(currentLoc,context).equals(enc.getLocationID()))){
-                		  selected="selected=\"selected\"";
-                	  }
-                    %>
-                    <option <%=selected %> value="<%=CommonConfiguration.getProperty(currentLoc,context)%>"><%=CommonConfiguration.getProperty(currentLoc,context)%></option>
-                    <%
-                    codeTaxNum++;
-                  }
-                  else{
-                    hasMoreLocs=false;
-                  }
-
-                }
-                %>
-
-              </select>
+              <%=LocationID.getHTMLSelector(false, enc.getLocationID(),qualifier,"selectCode","code","form-control") %>
+              
             </div>
             <div class="col-sm-3">
               <input name="Set Location ID" type="submit" id="setLocationBtn" value="<%=encprops.getProperty("setLocationID")%>" class="btn btn-sm"/>
@@ -1027,9 +1081,7 @@ if(enc.getLocation()!=null){
               <span class="form-control-feedback" id="locationIDerror">X</span>
             </div>
           </div>
-      <%
-        }
-        %>
+
 
     </form>
 </div>
@@ -2598,17 +2650,16 @@ else {
                          				if(enc.getAssignedUsername()!=null){
 
                         	 				String username=enc.getAssignedUsername();
-                        	 				Shepherd aUserShepherd=new Shepherd("context0");
-                        	 				aUserShepherd.setAction("encounter.jsp2");
-                         					if(aUserShepherd.getUser(username)!=null){
+                         					if(myShepherd.getUser(username)!=null){
                          					%>
                                 			<%
 
-                         					User thisUser=aUserShepherd.getUser(username);
+                         					User thisUser=myShepherd.getUser(username);
                                 			String profilePhotoURL="../images/empty_profile.jpg";
 
                          					if(thisUser.getUserImage()!=null){
                          						profilePhotoURL="/"+CommonConfiguration.getDataDirectoryName("context0")+"/users/"+thisUser.getUsername()+"/"+thisUser.getUserImage().getFilename();
+                         						
                          					}
                          					%>
                      						<%
@@ -2623,7 +2674,7 @@ else {
      								<div>
                       <div class="row">
                         <div class="col-sm-6" style="padding-top: 15px; padding-bottom: 15px;">
-                          <img src="../cust/mantamatcher/img/individual_placeholder_image.jpg" class="lazyload" align="top" data-src="<%=profilePhotoURL%>" style="height: 150px;border: 1px solid;" />
+                          <img src="../cust/mantamatcher/img/individual_placeholder_image.jpg" class="lazyload" align="top" data-src="<%=profilePhotoURL%>" style="border: 1px solid;" />
                         </div>
                         <div class="col-sm-6" style="padding-top: 15px; padding-bottom: 15px;">
                           <%-- <p> --%>
@@ -2668,8 +2719,7 @@ else {
                       	&nbsp;
                       	<%
                       	}
-                        aUserShepherd.rollbackDBTransaction();
-                        aUserShepherd.closeDBTransaction();
+
                       	}
                          				//insert here
 %>
@@ -2688,25 +2738,16 @@ else {
         <select name="submitter" id="submitterSelect" class="form-control" size="1">
             <option value=""></option>
             <%
-
-            Shepherd userShepherd=new Shepherd("context0");
-            userShepherd.setAction("encounter.jsp3");
-            userShepherd.beginDBTransaction();
-
-            ArrayList<String> usernames=userShepherd.getAllUsernames();
-
+            List<String> usernames=myShepherd.getAllUsernames();
+            usernames.remove(null);
+            Collections.sort(usernames,String.CASE_INSENSITIVE_ORDER);
             int numUsers=usernames.size();
             for(int i=0;i<numUsers;i++){
                 String thisUsername=usernames.get(i);
-                //User thisUser2=userShepherd.getUser(thisUsername);
-                String thisUserFullname=thisUsername;
-                //if((thisUser2!=null)&&(thisUser2.getFullName()!=null)){thisUserFullname=thisUser2.getFullName();}
-              %>
-              <option value="<%=thisUsername%>"><%=thisUserFullname%></option>
-              <%
+                	%>
+              		<option value="<%=thisUsername%>"><%=thisUsername%></option>
+              		<%
             }
-            userShepherd.rollbackDBTransaction();
-            userShepherd.closeDBTransaction();
             %>
           </select>
       </div>
@@ -4051,15 +4092,29 @@ if(enc.getDistinguishingScar()!=null){recordedScarring=enc.getDistinguishingScar
 
       <div class="form-group row">
         <div class="col-sm-5">
-          <textarea name="behaviorComment" class="form-control" id="behaviorInput">
+          <%
+          List<String> behaviors = CommonConfiguration.getIndexedPropertyValues("behavior", request);
+          //System.out.println("got behaviors list "+behaviors);
+          if (!Util.isEmpty(behaviors)) {
+          %>
+          <select name="behaviorComment" id="behaviorInput" class="form-control" size="1">
+            <option value=""></option>
             <%
-           if((enc.getBehavior()!=null)&&(!enc.getBehavior().trim().equals(""))){
-           %>
-              <%=enc.getBehavior().trim()%>
+            for (String behavior: behaviors) {
+              String selected = (enc.getBehavior()!=null && enc.getBehavior().equals(behavior)) ? "selected=\"selected\"" : "";
+              %><option <%=selected %> value="<%=behavior%>"><%=behavior%></option><%
+            }
+            %>
+          </select>
+          <%} else {%>
+            <textarea name="behaviorComment" class="form-control" id="behaviorInput">
+              <% if((enc.getBehavior()!=null)&&(!enc.getBehavior().trim().equals(""))){ %>
+                <%=enc.getBehavior().trim()%>
+              <%}%>
+            </textarea>
           <%
           }
           %>
-          </textarea>
         </div>
         <div class="col-sm-3">
           <input name="EditBeh" type="submit" id="editBehavior" value="<%=encprops.getProperty("submitEdit")%>" class="btn btn-sm"/>
@@ -4128,20 +4183,32 @@ if(enc.getDistinguishingScar()!=null){recordedScarring=enc.getDistinguishingScar
 
     <div class="form-group row">
       <div class="col-sm-5">
-        <textarea name="groupRoleComment" class="form-control" id="groupRoleInput">
-          <%
-         if(oldGroupRole!=null){
-         %>
-            <%=oldGroupRole%>
         <%
-        }
+        List<String> groupRoles = CommonConfiguration.getIndexedPropertyValues("groupRole", request);
+        //System.out.println("got groupRoles list "+groupRoles);
+        if (!Util.isEmpty(groupRoles)) {
         %>
-        </textarea>
+        <select name="groupRoleComment" id="groupRoleInput" class="form-control" size="1">
+          <option value=""></option>
+          <%
+          for (String groupRole: groupRoles) {
+            String selected = (enc.getGroupRole()!=null && enc.getGroupRole().equals(groupRole)) ? "selected=\"selected\"" : "";
+            %><option <%=selected %> value="<%=groupRole%>"><%=groupRole%></option><%
+          }
+          %>
+        </select>
+        <%} else {%>
+          <textarea name="groupRoleComment" class="form-control" id="groupRoleInput">
+            <%if(oldGroupRole!=null){%>
+              <%=oldGroupRole%>
+            <%}%>
+          </textarea>
+        <%}%>
       </div>
       <div class="col-sm-3">
         <input name="EditGroupRole" type="submit" id="editGroupRole" value="<%=encprops.getProperty("submitEdit")%>" class="btn btn-sm"/>
-        <span class="form-control-feedback" id="groupRoleCheck">&check;</span>
-        <span class="form-control-feedback" id="groupRoleError">X</span>
+        <span class="form-control-feedback" style="display:none;" id="groupRoleCheck">&check;</span>
+        <span class="form-control-feedback" style="display:none;" id="groupRoleError">X</span>
       </div>
     </div>
     </form>
@@ -6351,38 +6418,100 @@ console.log('RETURNED ========> %o %o', textStatus, xhr.responseJSON.taskId);
     //TODO uncheck everything????
     $('.ia-match-filter-dialog').hide();
 }
+
+var encText = '<%=encprops.getProperty("encounter")%>';
+var noneText = '<%=encprops.getProperty("none")%>';
+var selectedText = '<%=encprops.getProperty("selected")%>';
+function iaMatchFilterLocationCountUpdate() {
+    var ct = 0;
+    var vals = [];
+    $('#ia-match-filter-location input:checked').each(function(i,el) {
+        vals.push(el.nextElementSibling.firstChild.nodeValue);
+        ct += parseInt($(el).parent().find('.item-count:first').text());
+    });
+    if ($('#match-filter-location-unlabeled').is(':checked')) ct += parseInt($('#match-filter-location-unlabeled').parent().find('.item-count').text());
+    if (ct < 1) {
+        $('#total-location-count').text(noneText + ' ' + selectedText);
+    } else {
+        $('#total-location-count').text(ct + ' ' + encText + ((ct == 1) ? '' : 's') + ' (' + vals.length + ' ' + selectedText + ')');
+    }
+    return true;
+}
+function adjustLocationCheckboxes(el) {
+    $(el).parent().find('ul input').each(function(i, inp) {
+        inp.checked = el.checked;
+    });
+    return true;
+}
+
+$(document).ready(function() {
+    adjustLocationCheckboxes( $('.ul-root input:checked')[0] );  //this will check all below the default-checked one
+    iaMatchFilterLocationCountUpdate();
+    $('.ul-root input[type="checkbox"]').on('change', function(ev) {
+        adjustLocationCheckboxes(ev.target);
+        iaMatchFilterLocationCountUpdate();
+    });
+/*
+    $('#ia-match-filter-location input').on('change', function(ev) {
+        iaMatchFilterLocationCountUpdate()
+    });
+*/
+});
 </script>
 
 <div class="ia-match-filter-dialog">
-  <h2><%=encprops.getProperty("matchFilterHeader")%></h2>
+<h2><%=encprops.getProperty("matchFilterHeader")%></h2>
   <div class="ia-match-filter-title search-collapse-header" style="padding-left:0; border:none;">
-    <span class="el el-lg el-chevron-right rotate-chevron"></span><%=encprops.getProperty("locationID")%>
+    <span class="el el-lg el-chevron-right rotate-chevron" style="margin-right: 8px;"></span><%=encprops.getProperty("locationID")%> &nbsp; <span class="item-count" id="total-location-count"></span>
   </div>
   <div class="ia-match-filter-container" style="display: none">
     <div  style="width: 100%; max-height: 200px; overflow-y: scroll">
-      <div id="ia-match-filter-location" class="option-cols">
-        <%
-        List<String> locs = myShepherd.getAllLocationIDs();
-        int c = 0;
-        for (String loc : locs) {
-            if (!Util.stringExists(loc) || loc.toLowerCase().equals("none")) continue;
-            //String sel = (loc.equals(enc.getLocationID()) ? "checked" : "");
-            String sel = "";
-            out.println("<div class=\"item item-" + sel + "\"><input id=\"mfl-" + c + "\" name=\"match-filter-location-id\" value=\"" + loc + "\" type=\"checkbox\"" + sel + " /><label for=\"mfl-" + c + "\">" + loc + "</label></div>");
-            c++;
-        }
-        %>
-      </div>
+    <div id="ia-match-filter-location" class="option-cols">
+<%
+
+Map<String,Long> locCount = new HashMap<String,Long>();
+locCount.put(null, 0L);
+String sql = "SELECT \"LOCATIONID\" AS locId, COUNT(*) AS ct FROM \"ENCOUNTER\" GROUP BY locId ORDER BY locId";
+Query q = myShepherd.getPM().newQuery("javax.jdo.query.SQL", sql);
+List results = (List)q.execute();
+int c = 0;
+Iterator it = results.iterator();
+while (it.hasNext()) {
+    Object[] row = (Object[]) it.next();
+    String locId = (String)row[0];
+    long ct = (long)row[1];
+    if (!Util.stringExists(locId) || locId.toLowerCase().equals("none")) {
+        locCount.put(null, locCount.get(null) + ct);
+    } else {
+        locCount.put(locId, ct);
+    }
+}
+
+
+JSONObject locIdTree = LocationID.getLocationIDStructure(request);
+locIdTree.put("_isRoot", true);
+List<String> locIds = new ArrayList<String>();  //filled as we traverse
+String output = traverseLocationIdTree(locIdTree, locIds, enc.getLocationID(), locCount);
+out.println("<div class=\"ul-root\">" + output + "</div>");
+
+//this is a sanity check for missed locationIDs !!
+for (String l : locCount.keySet()) {
+    if (!locIds.contains(l) && (l != null)) System.out.println("WARNING: LocationID tree does not contain id=[" + l + "] which occurs in " + locCount.get(l) + " encounters");
+}
+%>
+
     </div>
     <div>
-      <div style="margin-top: 10px; color: #660;" class="item">
-          <input type="checkbox" id="match-filter-location-unlabeled" name="match-filter-location-id" value="__NULL__" />
-          <label for="match-filter-location-unabled"><%=encprops.getProperty("matchFilterLocationUnlabeled")%></label>
-      </div>
-      <input type="button" value="<%=encprops.getProperty("selectAll")%>"
-          onClick="$('#ia-match-filter-location .item input').prop('checked', true);" />
-      <input type="button" value="<%=encprops.getProperty("selectNone")%>"
-          onClick="$('#ia-match-filter-location .item input').prop('checked', false);" />
+        <div style="margin-top: 10px; color: #660;" class="item">
+            <input type="checkbox" id="match-filter-location-unlabeled" name="match-filter-location-id" value="__NULL__" onChange="iaMatchFilterLocationCountUpdate();" />
+            <label for="match-filter-location-unabled"><%=encprops.getProperty("matchFilterLocationUnlabeled")%></label>
+            <span class="item-count"><%=locCount.get(null)%></span>
+        </div>
+<!-- TODO maybe an option here to not recurse to children locations? -->
+        <input type="button" value="<%=encprops.getProperty("selectAll")%>"
+            onClick="$('#ia-match-filter-location .item input').prop('checked', true); iaMatchFilterLocationCountUpdate();" />
+        <input type="button" value="<%=encprops.getProperty("selectNone")%>"
+            onClick="$('#ia-match-filter-location .item input').prop('checked', false); iaMatchFilterLocationCountUpdate();" />
     </div>
 
   </div>
@@ -6418,30 +6547,31 @@ $(".search-collapse-header").click(function(){
 });
 </script>
 
+</div>
 
 
-  <div class="ia-match-filter-title"><%=encprops.getProperty("matchFilterOwnership")%></div>
-  <div class="item">
-      <input type="checkbox" id="match-filter-owner-me" name="match-filter-owner" value="me" />
-      <label for="match-filter-owner-me"><%=encprops.getProperty("matchFilterOwnershipMine")%></label>
-  </div>
-  <!--  not yet implemented!
-      <div class="item">
-          <input type="checkbox" id="match-filter-owner-collab" name="match-filter-owner" value="collab" />
-          <label for="match-filter-owner-collab"><%=encprops.getProperty("matchFilterOwnershipCollab")%></label>
-      </div>
-      <div class="item">
-          <input type="checkbox" id="match-filter-owner-none" name="match-filter-owner" value="__NULL__" />
-          <label for="match-filter-owner-none"><%=encprops.getProperty("matchFilterOwnershipNone")%></label>
-      </div>
-  -->
-  <div class="ia-match-filter-section">
+<div class="ia-match-filter-title"><%=encprops.getProperty("matchFilterOwnership")%></div>
+    <div class="item">
+        <input type="checkbox" id="match-filter-owner-me" name="match-filter-owner" value="me" />
+        <label for="match-filter-owner-me"><%=encprops.getProperty("matchFilterOwnershipMine")%></label>
+    </div>
+<!--  not yet implemented!
+    <div class="item">
+        <input type="checkbox" id="match-filter-owner-collab" name="match-filter-owner" value="collab" />
+        <label for="match-filter-owner-collab"><%=encprops.getProperty("matchFilterOwnershipCollab")%></label>
+    </div>
+    <div class="item">
+        <input type="checkbox" id="match-filter-owner-none" name="match-filter-owner" value="__NULL__" />
+        <label for="match-filter-owner-none"><%=encprops.getProperty("matchFilterOwnershipNone")%></label>
+    </div>
+-->
+
+<div class="ia-match-filter-section">
     <input type="button" value="<%=encprops.getProperty("doMatch")%>" onClick="iaMatchFilterGo()" />
     <input style="background-color: #DDD;" type="button" value="<%=encprops.getProperty("cancel")%>"
-          onClick="$('.ia-match-filter-dialog').hide()" />
-  </div>
-
+        onClick="$('.ia-match-filter-dialog').hide()" />
 </div>
+
 
 <%
 
