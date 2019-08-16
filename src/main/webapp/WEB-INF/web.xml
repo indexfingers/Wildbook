@@ -68,7 +68,7 @@
                 [urls]
 
                 /rest/** = authcBasicWildbook,roles[researcher]
-								/api/** = authcBasicWildbook,roles[rest-readonly]
+								/api/** = authcBasicWildbook,roles[rest]
                 /LightRest/** = authcBasicWildbook,roles[researcher]
 
 
