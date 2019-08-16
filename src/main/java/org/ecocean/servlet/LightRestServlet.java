@@ -1045,7 +1045,7 @@ System.out.println(thisRequest);
                 if (o instanceof Collection) {
                     jarr.put(convertToJson(req, (Collection)o, ec, myShepherd));
                 } else {  //TODO can it *only* be an JSONObject-worthy object at this point?
-                  JSONObject jo = convertToJson(req, o, ec);
+                  JSONObject jo = convertToJson(req, o, ec, myShepherd);
                   if (jo != null){
                     jarr.put(jo);
                   }
