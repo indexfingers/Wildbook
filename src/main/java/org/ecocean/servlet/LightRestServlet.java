@@ -239,13 +239,13 @@ public class LightRestServlet extends HttpServlet
                 PersistenceManager pm = pmf.getPersistenceManager();
                 String servletID=Util.generateUUID();
                 ShepherdPMF.setShepherdState("LightRestServlet.class"+"_"+servletID, "new");
-                
-                
+
+
                 try
                 {
                     pm.currentTransaction().begin();
                     ShepherdPMF.setShepherdState("LightRestServlet.class"+"_"+servletID, "begin");
-                    
+
 
                     Query query = pm.newQuery("JDOQL", queryString);
                     if (fetchParam != null)
@@ -272,7 +272,7 @@ public class LightRestServlet extends HttpServlet
                     resp.setStatus(200);
                     pm.currentTransaction().commit();
                     ShepherdPMF.setShepherdState("LightRestServlet.class"+"_"+servletID, "commit");
-                    
+
                 }
                 finally
                 {
@@ -280,13 +280,13 @@ public class LightRestServlet extends HttpServlet
                     {
                         pm.currentTransaction().rollback();
                         ShepherdPMF.setShepherdState("LightRestServlet.class"+"_"+servletID, "rollback");
-                        
+
                     }
                     pm.close();
                     //ShepherdPMF.setShepherdState("RestServlet.class"+"_"+servletID, "close");
                     ShepherdPMF.removeShepherdState("LightRestServlet.class"+"_"+servletID);
-                    
-                    
+
+
                 }
                 return;
             }
@@ -434,7 +434,7 @@ public class LightRestServlet extends HttpServlet
                         ShepherdPMF.removeShepherdState("LightRestServlet.class");
                         return;
                     }
-                    
+
                   }
                   else{
                     JSONObject error = new JSONObject();
@@ -464,13 +464,13 @@ public class LightRestServlet extends HttpServlet
                     //resp.getWriter().write(jsonobj.toString());
                     resp.setHeader("Content-Type","application/json");
                     //pm.currentTransaction().commit();
-                    
+
                 }
                 catch (NucleusObjectNotFoundException ex)
                 {
                     resp.setContentLength(0);
                     resp.setStatus(404);
-                   
+
                 }
                 catch (NucleusException ex)
                 {
@@ -479,7 +479,7 @@ public class LightRestServlet extends HttpServlet
                     resp.getWriter().write(error.toString());
                     resp.setStatus(404);
                     resp.setHeader("Content-Type", "application/json");
-                    
+
                 }
                 finally
                 {
@@ -931,15 +931,15 @@ System.out.println(thisRequest);
                     if (cls.getName().equals("org.ecocean.User")) throw new NucleusUserException("Cannot access org.ecocean.User objects at this time");
                     else if (cls.getName().equals("org.ecocean.Role")) throw new NucleusUserException("Cannot access org.ecocean.Role objects at this time");
                     else if (cls.getName().equals("org.ecocean.Adoption")) throw new NucleusUserException("Cannot access org.ecocean.Adoption objects at this time");
-                    
+
                 }
             } else {
                 cls = result.getClass();
                 if (cls.getName().equals("org.ecocean.User")) throw new NucleusUserException("Cannot access org.ecocean.User objects at this time");
                 else if (cls.getName().equals("org.ecocean.Role")) throw new NucleusUserException("Cannot access org.ecocean.Role objects at this time");
                 else if (cls.getName().equals("org.ecocean.Adoption")) throw new NucleusUserException("Cannot access org.ecocean.Adoption objects at this time");
-                
-                
+
+
             }
             return out;
         }
@@ -982,8 +982,10 @@ System.out.println(thisRequest);
             for (Object o : coll) {
                 if (o instanceof Collection) {
                     jarr.put(convertToJson(req, (Collection)o, ec));
-                } else {  //TODO can it *only* be an JSONObject-worthy object at this point?
-                    jarr.put(convertToJson(req, o, ec));
+                  } else {  //TODO can it *only* be an JSONObject-worthy object at this point?
+                    JSONObject jo = convertToJson(req, o, ec);
+                    if (jo != null){jarr.put(jo);}
+
                 }
             }
             return jarr;
