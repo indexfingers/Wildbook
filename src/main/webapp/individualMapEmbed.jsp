@@ -85,7 +85,7 @@ context=ServletUtilities.getContext(request);
 
 <script src="//maps.google.com/maps/api/js?key=<%=mapKey%>&language=<%=langCode%>"></script>
 <script type="text/javascript" src="javascript/markerclusterer/markerclusterer.js"></script>
-<script type="text/javascript" src="https://cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/src/markerclusterer.js"></script> 
+<script type="text/javascript" src="https://cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/src/markerclusterer.js"></script>
 <script src="javascript/oms.min.js"></script>
 <p><strong><%=mapping %></strong></p>
 <%
@@ -175,10 +175,10 @@ String lastLatLong="";
 					              var encSize3 = '<%if(indieEnc.getSizeAsDouble()!=null){%>'+'<br/>Size:'+<%=indieEnc.getSize()%>+'m'+'<%}%><br/>';
 					              var encURL4 = '<br/><a target=\"_blank\" href=\"\/\/'+'<%=CommonConfiguration.getURLLocation(request)%>'+'/encounters/encounter.jsp?number='+'<%=indieEnc.getEncounterNumber()%>'+'\" >'+'<%=props.getProperty("gotoEncounter")%>'+'</a></td></tr></table>';
 					              var indyURL5 = '<strong><a target=\"_blank\" href=\"\/\/'+'<%=CommonConfiguration.getURLLocation(request)%>'+'/individuals.jsp?number='+'<%=indieEnc.getIndividualID()%>'+'\">'+'<%=indieEnc.getIndividualID()%>'+'</a></strong>';
-					             
-					           	  var popWindow = encDate1 + encSex2 + encSize3 + encURL4 + indyURL5; 
-					           
-					           
+
+					           	  var popWindow = encDate1 + encSex2 + encSize3 + encURL4 + indyURL5;
+
+
 					              google.maps.event.addListener(marker,'click', function() {
 					                 (new google.maps.InfoWindow({content: popWindow })).open(map, this);
 					              });
@@ -213,6 +213,8 @@ String lastLatLong="";
  }
  for(int y=0;y<havegpsSize;y++){
 	 Encounter thisEnc=(Encounter)haveGPSData.get(y);
+   // only map encounters the users allowed to view
+   if (!Collaboration.canUserViewOwnedObject(thisEnc.getSubmitterID(), request, myShepherd)) continue;
 	 String thisLatLong="999,999";
 	 if(((thisEnc.getDecimalLatitude())!=null)&&(thisEnc.getDecimalLongitude()!=null)){
 		 thisLatLong=thisEnc.getDecimalLatitude()+","+thisEnc.getDecimalLongitude();
@@ -291,7 +293,7 @@ for (var i = 0; i < markers.length; i ++) {
   oms.addMarker(markers[i]);
   console.log(markers[i])
 }
- 
+
 setTimeout(function(){google.maps.event.removeListener(zoomChangeBoundsListener)}, 2000);
 var options = {
         imagePath: 'https://cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m',
