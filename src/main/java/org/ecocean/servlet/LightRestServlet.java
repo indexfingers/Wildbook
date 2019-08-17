@@ -24,6 +24,7 @@ import java.net.URLDecoder;
 import java.util.Collection;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
 import org.ecocean.ShepherdPMF;
 import org.ecocean.Util;
@@ -85,6 +86,19 @@ public class LightRestServlet extends HttpServlet
 
     private static final String[] Encounter_Light_Str_Fields = {"catalogNumber","individualID","occurrenceID","sex","otherCatalogNumbers","verbatimLocality","locationID","submitterName","submitterProject","submitterID","submitterOrganization","genus","specificEpithet", "dwcDateAdded","modified"};
     private static final String[] Encounter_Light_Int_Fields = {"year","month","day"};
+    private static final String[] Encounter_Light_Long_Fields = {};
+
+    private static final String[] Individual_Light_Str_Fields = {"individualID"};
+    private static final String[] Individual_Light_Int_Fields = {"numberEncounters"};
+
+    private static final String[] Individual_Encounter_Light_Str_Fields = {"catalogNumber","individualID","occurrenceID","sex","otherCatalogNumbers","verbatimLocality","locationID","submitterName","submitterProject","submitterID","submitterOrganization","genus","specificEpithet", "dwcDateAdded","modified"};
+    private static final String[] Individual_Encounter_Light_Long_Fields = {"dateInMilliseconds"};
+    private static final String[] Individual_Encounter_Light_Int_Fields = {"year","month","day"};
+
+    private static final String[] Individual_Encounter_Light_Str_Fields_Blocked = {"catalogNumber","individualID"};
+    private static final String[] Individual_Encounter_Light_Long_Fields_Blocked = {};
+    private static final String[] Individual_Encounter_Light_Int_Fields_Blocked = {};
+
 
     public static final NucleusLogger LOGGER_REST = NucleusLogger.getLoggerInstance("DataNucleus.REST");
 
@@ -223,6 +237,7 @@ public class LightRestServlet extends HttpServlet
         getPMF(req);
         // Retrieve any fetch group that needs applying to the fetch
         String fetchParam = req.getParameter("fetch");
+        System.out.println("        LIGHTREST: fetch param: " + fetchParam);
 
         String encodings = req.getHeader("Accept-Encoding");
         boolean useCompression = ((encodings != null) && (encodings.indexOf("gzip") > -1));
@@ -239,13 +254,13 @@ public class LightRestServlet extends HttpServlet
                 PersistenceManager pm = pmf.getPersistenceManager();
                 String servletID=Util.generateUUID();
                 ShepherdPMF.setShepherdState("LightRestServlet.class"+"_"+servletID, "new");
-
-
+                
+                
                 try
                 {
                     pm.currentTransaction().begin();
                     ShepherdPMF.setShepherdState("LightRestServlet.class"+"_"+servletID, "begin");
-
+                    
 
                     Query query = pm.newQuery("JDOQL", queryString);
                     if (fetchParam != null)
@@ -272,7 +287,7 @@ public class LightRestServlet extends HttpServlet
                     resp.setStatus(200);
                     pm.currentTransaction().commit();
                     ShepherdPMF.setShepherdState("LightRestServlet.class"+"_"+servletID, "commit");
-
+                    
                 }
                 finally
                 {
@@ -280,13 +295,13 @@ public class LightRestServlet extends HttpServlet
                     {
                         pm.currentTransaction().rollback();
                         ShepherdPMF.setShepherdState("LightRestServlet.class"+"_"+servletID, "rollback");
-
+                        
                     }
                     pm.close();
                     //ShepherdPMF.setShepherdState("RestServlet.class"+"_"+servletID, "close");
                     ShepherdPMF.removeShepherdState("LightRestServlet.class"+"_"+servletID);
-
-
+                    
+                    
                 }
                 return;
             }
@@ -434,7 +449,7 @@ public class LightRestServlet extends HttpServlet
                         ShepherdPMF.removeShepherdState("LightRestServlet.class");
                         return;
                     }
-
+                    
                   }
                   else{
                     JSONObject error = new JSONObject();
@@ -464,13 +479,13 @@ public class LightRestServlet extends HttpServlet
                     //resp.getWriter().write(jsonobj.toString());
                     resp.setHeader("Content-Type","application/json");
                     //pm.currentTransaction().commit();
-
+                    
                 }
                 catch (NucleusObjectNotFoundException ex)
                 {
                     resp.setContentLength(0);
                     resp.setStatus(404);
-
+                   
                 }
                 catch (NucleusException ex)
                 {
@@ -479,7 +494,7 @@ public class LightRestServlet extends HttpServlet
                     resp.getWriter().write(error.toString());
                     resp.setStatus(404);
                     resp.setHeader("Content-Type", "application/json");
-
+                    
                 }
                 finally
                 {
@@ -928,34 +943,45 @@ System.out.println(thisRequest);
             if (result instanceof Collection) {
                 for (Object obj : (Collection)result) {
                     cls = obj.getClass();
+                    System.out.println("Filter Result: objClass: " + cls);
                     if (cls.getName().equals("org.ecocean.User")) throw new NucleusUserException("Cannot access org.ecocean.User objects at this time");
                     else if (cls.getName().equals("org.ecocean.Role")) throw new NucleusUserException("Cannot access org.ecocean.Role objects at this time");
                     else if (cls.getName().equals("org.ecocean.Adoption")) throw new NucleusUserException("Cannot access org.ecocean.Adoption objects at this time");
-
+                    
                 }
             } else {
                 cls = result.getClass();
                 if (cls.getName().equals("org.ecocean.User")) throw new NucleusUserException("Cannot access org.ecocean.User objects at this time");
                 else if (cls.getName().equals("org.ecocean.Role")) throw new NucleusUserException("Cannot access org.ecocean.Role objects at this time");
                 else if (cls.getName().equals("org.ecocean.Adoption")) throw new NucleusUserException("Cannot access org.ecocean.Adoption objects at this time");
-
-
+                
+                
             }
             return out;
         }
 
 
-        JSONObject convertToJson(HttpServletRequest req, Object obj, ExecutionContext ec) {
+        JSONObject convertToJson(HttpServletRequest req, Object obj, ExecutionContext ec){
+            return convertToJson(req, obj, ec, "encounter");
+        }
+
+        JSONObject convertToJson(HttpServletRequest req, Object obj, ExecutionContext ec, String type) {
 //System.out.println("convertToJson(non-Collection) trying class=" + obj.getClass());
             //System.out.println("        LightRest: convertToJson(obj) has been called!");
             boolean isEnc = (obj.getClass()==Encounter.class);
-            //System.out.println("        LightRest: isEnc = "+isEnc);
+            boolean isIndi = (obj.getClass()==MarkedIndividual.class);
+            System.out.println("        LightRest: isIndi = "+isIndi);
 
             if (isEnc) {
 
-                JSONObject jobj = getEncLightJson((Encounter) obj, req);
+                JSONObject jobj = getEncLightJson((Encounter) obj, req, type);
                 return jobj;
 
+            }
+
+            if (isIndi) {
+                JSONObject jobj = getIndiLightJson((MarkedIndividual) obj, req, ec);
+                return jobj;
             }
 
             JSONObject jobj = RESTUtils.getJSONObjectFromPOJO(obj, ec);
@@ -977,15 +1003,22 @@ System.out.println(thisRequest);
             return jobj;
         }
 
-        JSONArray convertToJson(HttpServletRequest req, Collection coll, ExecutionContext ec) {
+
+        JSONArray convertToJson(HttpServletRequest req, Collection coll, ExecutionContext ec){
+            return convertToJson(req, coll, ec, "encounter");
+        }
+
+
+        JSONArray convertToJson(HttpServletRequest req, Collection coll, ExecutionContext ec, String type) {
             JSONArray jarr = new JSONArray();
             for (Object o : coll) {
                 if (o instanceof Collection) {
-                    jarr.put(convertToJson(req, (Collection)o, ec));
-                  } else {  //TODO can it *only* be an JSONObject-worthy object at this point?
-                    JSONObject jo = convertToJson(req, o, ec);
-                    if (jo != null){jarr.put(jo);}
-
+                    jarr.put(convertToJson(req, (Collection)o, ec,type));
+                } else {  //TODO can it *only* be an JSONObject-worthy object at this point?
+                    JSONObject jo = convertToJson(req, o, ec, type);
+                    if (jo != null)
+                        {jarr.put(jo);}
+                    
                 }
             }
             return jarr;
@@ -1039,15 +1072,77 @@ System.out.println("??? TRY COMPRESS ??");
             thisRequest = req;
         }
 
-        private JSONObject getEncLightJson(Encounter enc, HttpServletRequest req) {
+        private JSONObject getIndiLightJson(MarkedIndividual indi, HttpServletRequest req, ExecutionContext ec) {
+            JSONObject jobj = new JSONObject();
+            try {
+                    jobj.put("displayName",indi.getDisplayName());
+                } catch (org.datanucleus.api.rest.orgjson.JSONException thisIsTheStupidestFuckingLibraryForBlahBlah) {
+            }
+            //jobj.put("displayName",indi.getDisplayName());
+            Vector<Encounter> encs = indi.getEncounters();
+            JSONArray encJarr = convertToJson(req, (Collection) encs, ec, "individual");
+            try {
+                jobj.put("encounters", encJarr);
+            } catch (org.datanucleus.api.rest.orgjson.JSONException thisIsTheStupidestFuckingLibraryForBlahBlah) {
+            }
+            
+            for (String fieldName: Individual_Light_Str_Fields) {
+                try {
+                    Method getter = MarkedIndividual.class.getMethod(getterName(fieldName));
+                    String val = (String) getter.invoke(indi);
+                    if (val==null) continue;
+                    jobj.put(fieldName, val);
+                } catch (NoSuchMethodException nsm) {  //lets not stacktrace on this
+                    System.out.println("WARNING: LightRestServlet.getEncLightJson() finds no property '" + fieldName + "' on Encounter; ignoring");
+                } catch (Exception e) {
+                    System.out.println("Exception on LightRestServlet.getEncLightJson for fieldName "+fieldName);
+                    e.printStackTrace();
+                }
+            }
 
-            if (!Collaboration.canUserViewOwnedObject(enc.getSubmitterID(), req, myShepherd)) return null;
+            for (String fieldName: Individual_Light_Int_Fields) {
+                try {
+                    Method getter = MarkedIndividual.class.getMethod(getterName(fieldName));
+                    int val = ((Integer) getter.invoke(indi)).intValue();
+                    jobj.put(fieldName, val);
+                } catch (Exception e) {
+                    System.out.println("Exception on LightRestServlet.getEncLightJson for fieldName "+fieldName);
+                    e.printStackTrace();
+                }
+            }
+            return jobj;
+
+
+        }
+
+        private JSONObject getEncLightJson(Encounter enc, HttpServletRequest req) {
+            return getEncLightJson(enc,req,"encounter");
+        }
+
+        private JSONObject getEncLightJson(Encounter enc, HttpServletRequest req, String type) {
+            String[] strFields = Encounter_Light_Str_Fields;
+            String[] intFields = Encounter_Light_Int_Fields;
+            String[] longFields = Encounter_Light_Long_Fields;
+            if (type.equals("encounter")){
+                if (!Collaboration.canUserViewOwnedObject(enc.getSubmitterID(), req, myShepherd)) return null;
+            } else {
+                if (!Collaboration.canUserViewOwnedObject(enc.getSubmitterID(), req, myShepherd)){
+                    strFields = Individual_Encounter_Light_Str_Fields_Blocked;
+                    intFields = Individual_Encounter_Light_Int_Fields_Blocked;
+                    longFields = Individual_Encounter_Light_Long_Fields_Blocked;
+                } else {
+                    strFields = Individual_Encounter_Light_Str_Fields;
+                    intFields = Individual_Encounter_Light_Int_Fields;
+                    longFields = Individual_Encounter_Light_Long_Fields;
+                }
+            }
+   
 
             // would be time to check for viewing permissions
 
 
             JSONObject jobj = new JSONObject();
-            for (String fieldName: Encounter_Light_Str_Fields) {
+            for (String fieldName: strFields) {
                 try {
                     Method getter = Encounter.class.getMethod(getterName(fieldName));
                     String val = (String) getter.invoke(enc);
@@ -1060,10 +1155,20 @@ System.out.println("??? TRY COMPRESS ??");
                     e.printStackTrace();
                 }
             }
-            for (String fieldName: Encounter_Light_Int_Fields) {
+            for (String fieldName: intFields) {
                 try {
                     Method getter = Encounter.class.getMethod(getterName(fieldName));
                     int val = ((Integer) getter.invoke(enc)).intValue();
+                    jobj.put(fieldName, val);
+                } catch (Exception e) {
+                    System.out.println("Exception on LightRestServlet.getEncLightJson for fieldName "+fieldName);
+                    e.printStackTrace();
+                }
+            }
+            for (String fieldName: longFields) {
+                try {
+                    Method getter = Encounter.class.getMethod(getterName(fieldName));
+                    long val = ((Long) getter.invoke(enc)).longValue();
                     jobj.put(fieldName, val);
                 } catch (Exception e) {
                     System.out.println("Exception on LightRestServlet.getEncLightJson for fieldName "+fieldName);

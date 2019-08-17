@@ -1,6 +1,6 @@
 // lang  dictionary contains all language specific text. It is loaded in individuals jsp and contains
 // all the necessary keys from individuals.properties with the same syntax.
-var dict = {}; 
+var dict = {};
 var languageTable = function(words) {
 	dict = words;
 }
@@ -93,7 +93,7 @@ var getData = function(individualID) {
     var occurrenceArray = [];
     var dataObject = {};
 
-     d3.json(wildbookGlobals.baseUrl + "/api/jdoql?"+encodeURIComponent("SELECT FROM org.ecocean.Occurrence WHERE encounters.contains(enc) && enc.individual.individualID == \"" + individualID + "\" VARIABLES org.ecocean.Encounter enc"), function(error, json) {
+     d3.json(wildbookGlobals.baseUrl + "/LightRest/jdoql?"+encodeURIComponent("SELECT FROM org.ecocean.Occurrence WHERE encounters.contains(enc) && enc.individual.individualID == \"" + individualID + "\" VARIABLES org.ecocean.Encounter enc"), function(error, json) {
       if(error) {
         console.log("error")
       }
@@ -107,7 +107,7 @@ var getData = function(individualID) {
           //console.info('[%d] %o %o', j, thisOcc.encounters, thisOcc.encounters[j]);
           var thisEncIndID = getIndividualIDFromEncounterToString(thisOcc.encounters[j]);
 
-          
+
           //var thisEncIndID = jsonData[i].encounters[j].individualID;   ///only when we fix thisOcc.encounters to be real json   :(
           //console.info('i=%d, j=%d, -> %o', i, j, thisEncIndID);
           if (!thisEncIndID) continue;  //unknown indiv -> false
@@ -140,7 +140,7 @@ var getData = function(individualID) {
       for (var prop in dataObject) {
         var whale = new Object();
         whale = {text:prop, count:dataObject[prop], sex: "", haplotype: ""};
-        items.push(whale);	
+        items.push(whale);
       }
       if (items.length > 0) {
         getSexHaploData(individualID, items);
@@ -232,13 +232,13 @@ var makeTable = function(items, tableHeadLocation, tableBodyLocation, sortOn) {
     td.enter().append("td").html(function(d) {
       if(d == 'TissueSample') {
         return "<img class='encounterImg' src='images/microscope.gif'/>";
-      } 
+      }
       if(d == 'image') {
         return "<img class='encounterImg' src='images/Crystal_Clear_filesystem_folder_image.png'/>"
-      } 
+      }
       if(d == 'youtube-image') {
           return "<img class='encounterImg' src='images/youtube.png'/>"
-      } 
+      }
       if(d == 'both') {
         return "<img class='encounterImg' src='images/microscope.gif'/><img class='encounterImg' src='images/Crystal_Clear_filesystem_folder_image.png'/>";
       }
@@ -259,7 +259,7 @@ var makeTable = function(items, tableHeadLocation, tableBodyLocation, sortOn) {
         if(d == "GOS") {
           return "<a target='_blank' href='socialUnit.jsp?name=" + d + "'>" + d + "</a>"
         }
-      return d; 
+      return d;
     });
 
     if(sortOn !== null) {
@@ -274,13 +274,13 @@ var makeTable = function(items, tableHeadLocation, tableBodyLocation, sortOn) {
       td.html(function(d) {
         if(d == 'TissueSample') {
           return "<img class='encounterImg' src='images/microscope.gif'/>";
-        } 
+        }
         if(d == 'image') {
           return "<img class='encounterImg' src='images/Crystal_Clear_filesystem_folder_image.png'/>"
-        } 
+        }
         if(d == 'youtube-image') {
             return "<img class='encounterImg' src='images/youtube.png'/>"
-          } 
+          }
         if(d == 'both') {
           return "<img class='encounterImg' src='images/microscope.gif'/><img class='encounterImg' src='images/Crystal_Clear_filesystem_folder_image.png'/>";
         }
@@ -309,19 +309,19 @@ var makeTable = function(items, tableHeadLocation, tableBodyLocation, sortOn) {
       return b ? 1 : a ? -1 : 0;
     }
   }
-  
+
   function unixCrunch(date) {
 	  date = date.replace("-","/");
 	  return new Date(date).getTime()/1000;
   }
-  
+
 };
 
 
 var getEncounterTableData = function(occurrenceObjectArray, individualID) {
   var encounterData = [];
   var occurringWith = "";
-  d3.json(wildbookGlobals.baseUrl + "/api/jdoql?"+encodeURIComponent("SELECT FROM org.ecocean.MarkedIndividual WHERE individualID == \"" + individualID + "\"" ), function(error, json) {
+  d3.json(wildbookGlobals.baseUrl + "/LightRest/jdoql?"+encodeURIComponent("SELECT FROM org.ecocean.MarkedIndividual WHERE individualID == \"" + individualID + "\"" ), function(error, json) {
       if(error) {
         console.log("error")
       }
@@ -356,12 +356,12 @@ var getEncounterTableData = function(occurrenceObjectArray, individualID) {
         if(jsonData.encounters[i].tissueSamples || jsonData.encounters[i].annotations) {
           if (jsonData.encounters[i].tissueSamples && jsonData.encounters[i].tissueSamples.length > 0 && jsonData.encounters[i].annotations.length > 0){
                 var dataTypes = "both"
-              } 
+              }
           else if((jsonData.encounters[i].tissueSamples)&&(jsonData.encounters[i].tissueSamples.length > 0)) {
             var dataTypes = jsonData.encounters[i].tissueSamples[0].type;
-          } 
+          }
           else if((jsonData.encounters[i].annotations)&&(jsonData.encounters[i].annotations.length > 0)) {
-            
+
         	  if((jsonData.encounters[i].eventID)&&(jsonData.encounters[i].eventID.indexOf("youtube") > -1)){
         		  var dataTypes = "youtube-image";
         	  }
@@ -369,7 +369,7 @@ var getEncounterTableData = function(occurrenceObjectArray, individualID) {
         	  else{
         		  var dataTypes = "image";
         	  }
-        	  
+
           }
           else {
             var dataTypes = "";
@@ -415,7 +415,7 @@ var getEncounterTableData = function(occurrenceObjectArray, individualID) {
 
       var startTime;
       var endTime;
-     
+
       if (jsonData.startTime == "-1") {
     	  startTime = null;;
       } else {
@@ -479,11 +479,11 @@ var getEncounterTableData = function(occurrenceObjectArray, individualID) {
       var endTime = jsonData[i].endTime;
       if (startTime == "-1") {
         startTime = "Start Time";
-      } 
+      }
       if (endTime == "-1") {
 	endTime = "End Time";
       }
-		
+
       if(jsonData[i].markedIndividualName1 != individualID) {
         var whaleID = jsonData[i].markedIndividualName1;
         var markedIndividual = jsonData[i].markedIndividualName2;
@@ -513,7 +513,7 @@ var getIndividualData = function(relationshipArray) {
       if(error) {
         console.log("error")
       }
-      
+
       jsonData = json;
       var individualInfo = relationshipArray.filter(function(obj) {
         return obj.relationshipWith[0] === jsonData.individualID;
