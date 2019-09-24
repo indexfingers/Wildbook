@@ -267,7 +267,7 @@ System.out.println("\n\n==== got detected frame! " + ma + " -> " + ann.getFeatur
         while (it.hasNext()) {
             Object[] row = (Object[]) it.next();
             //int aid = (int)row[0];
-            int aid = ((Integer) row[0]).integerValue();
+            int aid = ((Integer) row[0]).intValue();
             String acm = (String)row[1];
             String eid = (String)row[2];
             String iid = (String)row[3];
