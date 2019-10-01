@@ -87,7 +87,6 @@ String context="context0";
 context=ServletUtilities.getContext(request);
 //get encounter number
 String num = request.getParameter("number").replaceAll("\\+", "").trim();
-
 //let's set up references to our file system components
 String rootWebappPath = getServletContext().getRealPath("/");
 File webappsDir = new File(rootWebappPath).getParentFile();
@@ -6405,7 +6404,7 @@ while (it.hasNext()) {
     Object[] row = (Object[]) it.next();
     String locId = (String)row[0];
     //long ct = (long)row[1];
-    long ct = ((Integer) row[1]).longValue();
+    long ct = ((Long) row[1]).longValue();
     if (!Util.stringExists(locId) || locId.toLowerCase().equals("none")) {
         nullCount += ct;
         continue;
