@@ -79,6 +79,12 @@ public class IA {
     }
     public static Task intakeMediaAssets(Shepherd myShepherd, List<MediaAsset> mas, final Task parentTask) {
         if ((mas == null) || (mas.size() < 1)) return null;
+        String context = myShepherd.getContext();
+        boolean useWSIA = false;
+        if((CommonConfiguration.getProperty("useWSIA", context)!=null)&&(CommonConfiguration.getProperty("useWSIA", context).equals("true"))){
+            useWSIA = true;
+        }
+        IA.log("INFO: IA.intakeMediaAssets() useWSIA set to " + useWSIA);
         Task task = new Task();
         if (parentTask != null) task.setParameters(parentTask.getParameters());
         task.setObjectMediaAssets(mas);
@@ -90,9 +96,9 @@ public class IA {
             maArr.put(ma.getId());
         }
         JSONObject dj = new JSONObject();
-        dj.put("mediaAssetIds", maArr);
-        String context = myShepherd.getContext();
+        dj.put("mediaAssetIds", maArr);        
         JSONObject qjob = new JSONObject();
+        qjob.put("wsia", useWSIA);
         qjob.put("detect", dj);
         qjob.put("taskId", task.getId());
         qjob.put("__context", context);
