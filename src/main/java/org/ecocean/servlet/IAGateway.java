@@ -1251,6 +1251,10 @@ System.out.println("IAGateway.addToQueue() publishing: " + content);
         }
 
         if ((jobj.optJSONObject("detect") != null) && (jobj.optString("taskId", null) != null)) {
+            if (jobj.optBoolean("wsia",true)) {
+                org.ecocean.wsiaPackage.WSIA.doDetect(jobj);
+                return;
+            }
             JSONObject res = new JSONObject("{\"success\": false}");
             res.put("taskId", jobj.getString("taskId"));
             String context = jobj.optString("__context", "context0");

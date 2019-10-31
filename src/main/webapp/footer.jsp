@@ -1,11 +1,34 @@
 <%@ page
 		contentType="text/html; charset=utf-8"
 		language="java"
-     	import="org.ecocean.CommonConfiguration,org.ecocean.ContextConfiguration"
+     	import="org.ecocean.CommonConfiguration,
+      org.ecocean.ContextConfiguration,
+      org.ecocean.ShepherdProperties,
+      org.ecocean.servlet.ServletUtilities,
+      org.ecocean.Shepherd,
+      org.ecocean.User,
+      java.util.ArrayList,
+      java.util.List,
+      java.util.Properties,
+      org.apache.commons.lang.WordUtils,
+      org.ecocean.security.Collaboration
+      "
 %>
         <%
-        String urlLoc = "//" + CommonConfiguration.getURLLocation(request);
-        %>
+				String context="context0";
+				context=ServletUtilities.getContext(request);
+				String langCode=ServletUtilities.getLanguageCode(request);
+				Properties props = new Properties();
+				props = ShepherdProperties.getProperties("header.properties", langCode, context);
+				Shepherd myShepherd = new Shepherd(context);
+				// 'sets serverInfo if necessary
+				CommonConfiguration.ensureServerInfo(myShepherd, request);
+				System.out.println(CommonConfiguration.getServerInfo(myShepherd).toString());
+				String urlLoc = "//" + CommonConfiguration.getURLLocation(request);
+				myShepherd.setAction("footer.jsp");
+				myShepherd.rollbackAndClose();
+        //String urlLoc = "//" + CommonConfiguration.getURLLocation(request);
+        %>/
 
         <!-- footer -->
         <footer class="page-footer">

@@ -135,6 +135,7 @@ public class WSIA {
       try {
         res.put("sendMediaAssets", sendMediaAssetsNew(mas, context));
         JSONObject sent = sendDetect(mas, baseUrl, context, taskId);
+        System.out.println("Send detect reply: " + sent);
         res.put("sendDetect", sent);
         String jobId = taskId;
         if ((sent.optJSONObject("status") == null) || sent.getJSONObject("status").optBoolean("success", false) == false)

@@ -23,6 +23,10 @@ String context=ServletUtilities.getContext(request);
 Shepherd myShepherd=null;
 myShepherd=new Shepherd(context);
 myShepherd.setAction("index.jsp");
+// CommonConfiguration.setServerInfo(myShepherd, null);
+// CommonConfiguration.ensureServerInfo(myShepherd, request);
+// System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+//System.out.println(CommonConfiguration.getServerInfo(myShepherd).toString());
 
 String mapKey = CommonConfiguration.getGoogleMapsKey(context);
 String langCode=ServletUtilities.getLanguageCode(request);
@@ -64,7 +68,7 @@ margin-bottom: 8px !important;
   var map;
   var mapZoom = 8;
   var center;
-  var newCenter;	
+  var newCenter;
 //Define the overlay, derived from google.maps.OverlayView
   function Label(opt_options) {
    // Initialization
@@ -102,7 +106,7 @@ margin-bottom: 8px !important;
      google.maps.event.removeListener(this.listeners_[i]);
    }
   };
-  
+
   // Implement draw
   Label.prototype.draw = function() {
    var projection = this.getProjection();
@@ -121,7 +125,7 @@ margin-bottom: 8px !important;
     	// Create an array of styles for our Google Map.
   	    //var gmap_styles = [{"stylers":[{"visibility":"off"}]},{"featureType":"water","stylers":[{"visibility":"on"},{"color":"#00c0f7"}]},{"featureType":"landscape","stylers":[{"visibility":"on"},{"color":"#005589"}]},{"featureType":"administrative","elementType":"geometry.stroke","stylers":[{"visibility":"on"},{"color":"#00c0f7"},{"weight":1}]}]
     	if($("#map_canvas").hasClass("full_screen_map")){mapZoom=3;}
-		
+
     	if (center == null) {
 	    	center = new google.maps.LatLng(0,0);
     	} else {
@@ -158,7 +162,7 @@ margin-bottom: 8px !important;
  			    	}
  			    }
  		});
- 		
+
  		// let's add map points for our locationIDs
  		<%
  		List<String> locs=CommonConfiguration.getIndexedPropertyValues("locationID", context);
@@ -211,20 +215,20 @@ margin-bottom: 8px !important;
     			center = newCenter;
     			map.setCenter(map.getCenter());
     		});
-    		 
- 	     }); 	 
-    	 
-    	 google.maps.event.addDomListener(window, "resize", function() {	 
+
+ 	     });
+
+    	 google.maps.event.addDomListener(window, "resize", function() {
  	    	console.log("Resize Center : "+center);
  	    	google.maps.event.trigger(map, "resize");
  	  	    console.log("Resize : "+newCenter);
  	  	    map.setCenter(center);
- 	     });    
+ 	     });
  	 } // end initialize function
- 	  	  
- 	  	 
- 	 
- 	 
+
+
+
+
       function fullScreen(){
   		$("#map_canvas").addClass('full_screen_map');
   		$('html, body').animate({scrollTop:0}, 'slow');
@@ -282,11 +286,11 @@ margin-bottom: 8px !important;
  	  	  fullScreen();
  	  	}
  	  });
-  	  
+
   	  // Setup the click event listeners: toggle the full screen
   	}
     google.maps.event.addDomListener(window, 'load', initialize);
-  	
+
   </script>
 <%
 
@@ -362,7 +366,7 @@ finally{
 
 <div class="carousel-inner text-left">
 
-	<div class="row"> 
+	<div class="row">
 		<div class="col-xs-12 col-sm-7 col-md-7 col-lg-7">
 			<h3><%=props.getProperty("innerPhotoH3") %></h3>
 			<p class="lead">
@@ -376,7 +380,7 @@ finally{
 
 	<hr>
 
-	<div class="row"> 
+	<div class="row">
 		<div class="hidden-xs col-sm-6  col-md-6  col-lg-6">
 			<img  src="images/how_it_works_submit.jpg" alt=""  />
 		</div>
@@ -390,7 +394,7 @@ finally{
 
 	<hr>
 
-	<div class="row"> 
+	<div class="row">
 		<div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
 			<h3><%=props.getProperty("innerVerifyH3") %></h3>
 			<p class="lead">
@@ -404,7 +408,7 @@ finally{
 
 	<hr>
 
-	<div class="row"> 
+	<div class="row">
 		<div class="hidden-xs col-sm-6  col-md-6  col-lg-6">
 			<img  src="images/how_it_works_matching_process.jpg" alt=""  />
 		</div>
@@ -418,7 +422,7 @@ finally{
 
 	<hr>
 
-	<div class="row"> 
+	<div class="row">
 		<div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
 			<h3><%=props.getProperty("innerResultH3") %></h3>
 			<p class="lead">

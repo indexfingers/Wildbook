@@ -65,7 +65,8 @@ public class IAPluginManager {
     //someday this may be done with reflection etc, but too lazy to do that now
     public static List<Class> getAllPluginClasses(String context) {
         List<Class> all = new ArrayList<Class>();
-        all.add(org.ecocean.ia.plugin.WildbookIAM.class);
+        //all.add(org.ecocean.ia.plugin.WildbookIAM.class);
+        all.add(org.ecocean.ia.plugin.WSIAM.class);
         all.add(org.ecocean.ia.plugin.TestPlugin.class);
         return all;
     }
@@ -142,4 +143,3 @@ public class IAPluginManager {
     }
 */
 }
-
