@@ -32,3 +32,5 @@ src/main/caribwhale_data_dir
 .classpath
 
 catalina.base_IS_UNDEFINED
+/.apt_generated/
+/.apt_generated_tests/

@@ -116,6 +116,13 @@ public class FeatureType implements java.io.Serializable {
             "org.ecocean.dorsalEdge.edgeSpots",
             "org.ecocean.whaleshark.referenceSpots",
             "org.ecocean.whaleshark.spots",
+            "org.sosf.ws.dorsalfin.referenceSpots",
+            "org.sosf.ws.dorsalfin.edgeSpots",
+            "org.sosf.boundingBox",
+            "org.sosf.boundingBoxSoftMask",
+            "org.sosf.ws.classFinSide",
+            "org.sosf.ws.classCaudal",
+            "org.sosf.quality",
             "org.ecocean.MediaAssetPlaceholder"   //experimental (really only in flukebook)
         };
         System.out.println("INFO: no FeatureTypes found; creating them:");

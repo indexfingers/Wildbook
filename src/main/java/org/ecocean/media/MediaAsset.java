@@ -591,6 +591,23 @@ public class MediaAsset implements java.io.Serializable {
         return f;
     }
 
+    
+    public Feature generateFeatureFromBbox(double w, double h, double x, double y, JSONObject params, String type) {
+      Feature f = null;
+      if ((x != 0) || (y != 0) || (w != this.getWidth()) || (h != this.getHeight())) {
+          if (params == null) params = new JSONObject();
+          params.put("width", w);
+          params.put("height", h);
+          params.put("x", x);
+          params.put("y", y);
+          f = new Feature(type, params);
+          this.addFeature(f);
+      } else {
+          //oopsy this ignores extra params!   TODO FIXME should we change this?
+          f = this.generateUnityFeature();
+      }
+      return f;
+  }
     //if unity feature is appropriate, generates that; otherwise does a boundingBox one
     //   'params' is extra params to use, and can be null
     public Feature generateFeatureFromBbox(double w, double h, double x, double y, JSONObject params) {

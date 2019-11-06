@@ -1305,6 +1305,16 @@ System.out.println("--- BEFORE _doIdentify() ---");
             System.out.println("ERROR: processCallbackQueueMessage() failed to parse JSON from " + message);
             return;
         }
+        String context = jmsg.optString("context", null);
+        if (context == null) {
+            System.out.println("ERROR: processCallbackQueueMessage() failed to get context from " + message);
+            return;
+        }
+        
+        if((CommonConfiguration.getProperty("useWSIA", context)!=null)&&(CommonConfiguration.getProperty("useWSIA", context).equals("true"))){
+            org.ecocean.wsiaPackage.WSIA.callbackFromQueue(jmsg);
+            return;
+        }
         //System.out.println("NOT YET IMPLEMENTED!  processCallbackQueueMessage got: " + message);
         IBEISIA.callbackFromQueue(jmsg);
     }

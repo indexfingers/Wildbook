@@ -375,6 +375,14 @@ public class Annotation implements java.io.Serializable {
             System.out.println("WARNING: annotation " + this.getId() + " is featureless, falling back to deprecated __getMediaAsset().  please fix!");
             return __getMediaAsset();
         }
+        
+        // return first feature that has a media asset (not as below)
+        for (Feature _ft : fts) {
+          if (_ft.getMediaAsset() != null) {
+            return _ft.getMediaAsset();
+          }
+        }
+        
         return fts.get(0).getMediaAsset();  //should this instead return first feature *that has a MediaAsset* ??
     }
 /*  deprecated
@@ -411,10 +419,15 @@ public class Annotation implements java.io.Serializable {
 
     //returns null if not MediaAsset (whaaa??), otherwise a list (possibly empty) of siblings on the MediaAsset
     public List<Annotation> getSiblings() {
-        if (this.getMediaAsset() == null) return null;
+        if (this.getMediaAsset() == null) {
+          System.out.println("Annotation: getsiblings: this ma is null, returning null");
+          return null;
+        }
         List<Annotation> sibs = new ArrayList<Annotation>();
+        System.out.println("Annotation: getsiblings: num poss sibs is " + this.getMediaAsset().getAnnotations().size());
         for (Annotation ann : this.getMediaAsset().getAnnotations()) {  //fyi .getAnnotations() doesnt return null
-            if (!ann.getId().equals(this.getId())) sibs.add(ann);
+            System.out.println("Annotation: getsiblings: annid: " + ann.getId());
+          if (!ann.getId().equals(this.getId())) sibs.add(ann);
         }
         return sibs;
     }
@@ -796,8 +809,10 @@ System.out.println("  >> findEncounterDeep() -> ann = " + ann);
         ////Encounter enc = this.findEncounter(myShepherd);
 
         //rather, we straight up find sibling Annotations, and look at them...
+        System.out.println("Annotation:toEncounter calling getsiblings");
         List<Annotation> sibs = this.getSiblings();
         if ((sibs == null) || (sibs.size() < 1)) {  //no sibs, we make a new Encounter!
+            System.out.println("Annotation.toEncounter(): no siblings found. Making new encounter");
             Encounter enc = new Encounter(this);
             //this taxonomy only works when its twitter-sourced data cuz otherwise this is just null 
             enc.setTaxonomy(IBEISIA.taxonomyFromMediaAsset(myShepherd, TwitterUtil.parentTweet(myShepherd, this.getMediaAsset())));
