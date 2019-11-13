@@ -6,11 +6,14 @@ import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.jdo.Query;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
@@ -702,7 +705,14 @@ System.out.println("CALLBACK GOT: (taskID " + taskID + ") ");
             myShepherd.getPM().makePersistent(ft);
         }
     }
-
+    
+//    ArrayList<Annotation> matchAgainst = getTopNAnnotationsByQuality(enc, 5);
+//    for (Annotation a: matchAgainst) {
+//      a.setMatchAgainst(true);
+//      myShepherd.getPM().makePersistent(a);
+//    }
+//    
+    
     myShepherd.getPM().makePersistent(enc);
     if (occ != null) myShepherd.getPM().makePersistent(occ);
     System.out.println("* createAnnotationFromIAResult() CREATED " + ann + " on Encounter " + enc.getCatalogNumber());
@@ -806,12 +816,12 @@ System.out.println("CALLBACK GOT: (taskID " + taskID + ") ");
     ann.setViewpoint(viewpoint);
     if (qualScore!=defaultQVal) ann.setQuality(qualScore);
     
-    // todo replace this with something more sophisticated - maybe above - make the best n annotations as matchagainst
-    if((qualScore>0) & (finKw == null)) {
-      System.out.println("[INFO] WSIA: convertAnnotation: setting annotation (acmId) "+ann.getAcmId()+" to match against based on quality and"
-          + "not caudal only. Replace with better system..??");
-      ann.setMatchAgainst(true);
-    }
+  //  // todo replace this with something more sophisticated - maybe above - make the best n annotations as matchagainst
+//    if((qualScore>0) & (finKw == null)) {
+//      System.out.println("[INFO] WSIA: convertAnnotation: setting annotation (acmId) "+ann.getAcmId()+" to match against based on quality and"
+//          + "not caudal only. Replace with better system..??");
+//      ann.setMatchAgainst(true);
+//    }
     
     return ann;
     
@@ -828,6 +838,152 @@ System.out.println("CALLBACK GOT: (taskID " + taskID + ") ");
     if (speciesMap.containsKey(iaClassLabel)) return speciesMap.get(iaClassLabel);
     return null;  //we FAIL now if no explicit mapping.... sorry
   }
+  
+  public static void initiateIndexCreation(String context) throws InvalidKeyException, NoSuchAlgorithmException, RuntimeException, IOException{
+    //likely will become more sophisticated, but for now:
+    //
+    // 1. get the config from ia.properties:
+    // {"indexId":id,"matchingSetParams"{"species";param,"location":param2, "etc":p3},"encodingParams":{}}
+    // for all indexes we want to build. Perhaps later we can have args which indicate / override 
+    // params from ia.properties? NB we'll save the encoding / matching params in ia with the index 
+    // so we can check the params for consistency with those provided during identification 
+    //
+    // 2. get the matching set
+    //
+    // 3. (optional) sendMediaAssetsNew(), sendAnnotationsNew()
+    //
+    // 4. Create a (uuid) index version id
+    //
+    // 5. Send the index creation task to ia
+    //
+    // 6. (do later) provide callback url (?) and persist the index creation process so we can track it
+    Shepherd myShepherd = new Shepherd(context);
+    JSONObject matchingSet = getMatchAgainstSetJson(myShepherd);
+    HashMap<String,Object> map = new HashMap<String,Object>();
+    map.put("matchset",matchingSet);
+    map.put("matchset_tag", "SAWS");
+    map.put("taskid",Util.generateUUID());
+    map.put("encoding_config", "default");
+    
+    String u = IA.getProperty(context, "WSIARestUrlCreateIndex");
+    if (u == null) throw new MalformedURLException("configuration value IBEISIARestUrlStartIdentifyAnnotations is not set");
+    URL url = new URL(u);
+    JSONObject rtn = RestClient.post(url, IBEISIA.hashMapToJSONObject2(map));
+    return;
+    
+    
+    
+    
+  }
+  
+  
+  public static boolean validForIdentification(Annotation ann) {
+    if (ann.getQuality()==null) return false;
+    if (getFeatByType(ann.getFeatures(),"org.sosf.ws.dorsalfin.edgeSpots")==null) return false;
+    MediaAsset asset = ann.getMediaAsset();
+    if (asset==null) return false;
+    if (!asset.getDetectionStatus().equals(STATUS_COMPLETE)) return false;
+    return true;
+  }
+  
+  static public ArrayList<Annotation> getMatchingSetForFilter(Shepherd myShepherd, String filter) {
+    if (filter == null) return null;
+    long t = System.currentTimeMillis();
+    System.out.println("INFO: getMatchingSetForFilter filter = " + filter);
+    Query query = myShepherd.getPM().newQuery(filter);
+    Collection c = (Collection)query.execute();
+    Iterator it = c.iterator();
+    ArrayList<Annotation> anns = new ArrayList<Annotation>();
+    while (it.hasNext()) {
+        Annotation ann = (Annotation)it.next();
+        if (!validForIdentification(ann)) continue;
+        anns.add(ann);
+    }
+    query.closeAll();
+    System.out.println("INFO: getMatchingSetForFilter found " + anns.size() + " annots (" + (System.currentTimeMillis() - t) + "ms)");
+    return anns;
+  }
+  
+  static public ArrayList<Annotation> getMatchingSetAllSpecies(Shepherd myShepherd) {
+    return getMatchingSetForFilter(myShepherd, "SELECT FROM org.ecocean.Annotation WHERE matchAgainst && acmId != null");
+  }
+  
+  
+  public static JSONObject getMatchAgainstSetJson(Shepherd myShepherd) {
+    ArrayList<Annotation> allAnns = getMatchAgainstSet(myShepherd);
+    ArrayList<String> acmList = new ArrayList<String>();
+    ArrayList<Double> qualityList = new ArrayList<Double>();
+    ArrayList<List<String>> kwList = new ArrayList<List<String>>();
+    ArrayList<String> encounterIdList = new ArrayList<String>();
+    // gonna need a bunch of catches and conditions in here (if returns null, length=0 etc
+    // conditions about acmid and matchagainst = true handled in query string. Correct fetaures, quality
+    // and media asset, asset detection status handled in validforidentification(). Here we just check 
+    // the encounter...
+    for (Annotation a : allAnns) {
+      Encounter enc = a.findEncounter(myShepherd);
+      if (enc == null) continue;
+      String catNo = enc.getCatalogNumber();
+      if (catNo == null) continue;
+      encounterIdList.add(catNo);  
+      acmList.add(a.getAcmId());
+      qualityList.add(a.getQuality());
+      MediaAsset asset = a.getMediaAsset();
+      kwList.add(asset.getKeywordNames());
+      // maybe put date in here if we want to at some point...
+//    e.g.  enc.getDateInMilliseconds();
+    }
+    
+    JSONObject set = new JSONObject();
+    set.put("acmList", acmList);
+    set.put("qualityList", qualityList);
+    set.put("kwList", kwList);
+    set.put("encounterIdList", encounterIdList);
+    return set;
+  }
+  
+  
+  
+  
+  public static ArrayList<Annotation> getMatchAgainstSet(Shepherd myShepherd){
+    return getMatchingSetAllSpecies(myShepherd);
+  }
+  
+//  public static ArrayList<Annotation> getTopNAnnotationsByQuality(Encounter enc, int N) {
+//    ArrayList<Annotation> qualifyingAnnotations = new ArrayList<Annotation>();
+//    ArrayList<Annotation> matchAgainstSet = new ArrayList<Annotation>();
+//    for (Annotation a : enc.getAnnotations()) {
+//      if (a.isTrivial()) continue;
+//      MediaAsset asset = a.getMediaAsset();
+//      if (asset == null) continue;
+//      if (! asset.getDetectionStatus().equals(org.ecocean.wsiaPackage.WSIA.STATUS_COMPLETE)) continue;
+//      if ( asset.getKeywordNames().contains("Caudal")) continue;
+//      Feature boundary = org.ecocean.wsiaPackage.WSIA.getFeatByType(asset.getFeatures(),"org.sosf.ws.dorsalfin.edgeSpots");
+//      if (boundary == null) continue;
+//      if (asset.getKeywordNames().contains("Exemplar")) {
+//        matchAgainstSet.add(a);
+//      } else {
+//        qualifyingAnnotations.add(a);  
+//      }
+//    }
+//     if (matchAgainstSet.size()>=N) {
+//       return (ArrayList<Annotation>) matchAgainstSet.subList(0, N-1);
+//     }
+//    
+//    if (qualifyingAnnotations.size()==0) return matchAgainstSet;
+//    ArrayList<Double> quals = new ArrayList<Double>();
+//    for (Annotation a : qualifyingAnnotations) {
+//      quals.add(a.getQuality());
+//    }
+//    Collections.sort(quals);
+//    Collections.reverse(quals);
+//    
+//    int numNeeded = N - matchAgainstSet.size();
+//    double thresh = quals.get(numNeeded).doubleValue();
+//    for (Annotation a : qualifyingAnnotations) {
+//      if (a.getQuality().doubleValue()>thresh) matchAgainstSet.add(a);
+//    }
+//    return matchAgainstSet;  
+//  }
   
   
 //  private static boolean duplicateDetection2(MediaAsset ma, JSONObject iaResult) {
@@ -848,42 +1004,42 @@ System.out.println("CALLBACK GOT: (taskID " + taskID + ") ");
 //    }
 //  }
   
-  private static boolean duplicateDetection(MediaAsset ma, JSONObject iaResult ) {
-    // jann is iaResult
-    System.out.println("-- Verifying that we do not have a feature for this detection already...");
-    if (ma.getFeatures()!=null&&ma.getFeatures().size()>0) {
-      
-      JSONArray fts = iaResult.optJSONArray("features");
-      JSONObject box = getFeatByType(fts, "box");
-        double width = box.optDouble("w", 0);
-        double height = box.optDouble("h", 0);
-        double xtl = box.optDouble("tlx", 0);
-        double ytl = box.optDouble("tly", 0);
-        ArrayList<Feature> ftrs = ma.getFeatures();
-        System.out.println(ftrs.size());
-        for (Feature ft  : ftrs) {
-          if (ft.getType() == null) continue;
-          if (! ft.getType().toString().equals("org.sosf.boundingBox")) continue;
-            try {
-                JSONObject params = ft.getParameters();
-                if (params!=null) {
-                    Double ftWidth = params.optDouble("width", 0);
-                    Double ftHeight = params.optDouble("height", 0);
-                    Double ftXtl = params.optDouble("x", 0);
-                    Double ftYtl = params.optDouble("y", 0);
-                    // yikes!
-                    if (ftHeight==0||ftHeight==0||height==0||width==0) {continue;}
-                    if ((width==ftWidth)&&(height==ftHeight)&&(ytl==ftYtl)&&(xtl==ftXtl)) {
-                        System.out.println("We have an Identicle detection feature! Skip this ann.");
-                        return true;
-                    }
-                }
-            } catch (NullPointerException npe) {continue;}
-        }
-    }
-    System.out.println("---- Did not find an identicle feature.");
-    return false;
-}
+//  private static boolean duplicateDetection(MediaAsset ma, JSONObject iaResult ) {
+//    // jann is iaResult
+//    System.out.println("-- Verifying that we do not have a feature for this detection already...");
+//    if (ma.getFeatures()!=null&&ma.getFeatures().size()>0) {
+//      
+//      JSONArray fts = iaResult.optJSONArray("features");
+//      JSONObject box = getFeatByType(fts, "box");
+//        double width = box.optDouble("w", 0);
+//        double height = box.optDouble("h", 0);
+//        double xtl = box.optDouble("tlx", 0);
+//        double ytl = box.optDouble("tly", 0);
+//        ArrayList<Feature> ftrs = ma.getFeatures();
+//        System.out.println(ftrs.size());
+//        for (Feature ft  : ftrs) {
+//          if (ft.getType() == null) continue;
+//          if (! ft.getType().toString().equals("org.sosf.boundingBox")) continue;
+//            try {
+//                JSONObject params = ft.getParameters();
+//                if (params!=null) {
+//                    Double ftWidth = params.optDouble("width", 0);
+//                    Double ftHeight = params.optDouble("height", 0);
+//                    Double ftXtl = params.optDouble("x", 0);
+//                    Double ftYtl = params.optDouble("y", 0);
+//                    // yikes!
+//                    if (ftHeight==0||ftHeight==0||height==0||width==0) {continue;}
+//                    if ((width==ftWidth)&&(height==ftHeight)&&(ytl==ftYtl)&&(xtl==ftXtl)) {
+//                        System.out.println("We have an Identicle detection feature! Skip this ann.");
+//                        return true;
+//                    }
+//                }
+//            } catch (NullPointerException npe) {continue;}
+//        }
+//    }
+//    System.out.println("---- Did not find an identicle feature.");
+//    return false;
+//}
   
   public static double getDetectionCutoffValue(String context) {
     return getDetectionCutoffValue(context, null);
@@ -902,7 +1058,13 @@ public static double getDetectionCutoffValue(String context, Task task) {
     }
     return 0.1;  //lowish value cuz we trust detection by default
 }
-          
+  
+  public static Feature getFeatByType(ArrayList<Feature> fts, String type) {
+    for (Feature f : fts) {
+      if (type.equals(f.getType().getId())) return f;
+    }
+    return null;
+  }
           
   public static JSONObject getFeatByType(JSONArray jarr, String type) {
       JSONObject rtn  = null;
