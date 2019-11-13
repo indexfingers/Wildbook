@@ -170,6 +170,18 @@ public class StartupWildbook implements ServletContextListener {
                 return true;
             }
         }
+        
+        class WSIAMessageHandler extends QueueMessageHandler {
+          public boolean handler(String msg) {
+              try {
+                  org.ecocean.servlet.IAGateway.processWSIAQueueMessage(msg);  //yeah we need to move this somewhere else...
+              } catch (Exception ex) {
+                  System.out.println("WARNING: IACallbackMessageHandler processCallbackQueueMessage() threw " + ex.toString());
+                  ex.printStackTrace();
+              }
+              return true;
+          }
+        }
 
         if (!IBEISIA.iaEnabled()) {
             System.out.println("+ INFO: IA not enabled; IA queue service not started");
@@ -188,7 +200,15 @@ public class StartupWildbook implements ServletContextListener {
         } catch (java.io.IOException ex) {
             System.out.println("+ ERROR: IACallback queue startup exception: " + ex.toString());
         }
-        if ((queue == null) || (queueCallback == null)) {
+        
+        Queue queueWSIA = null;
+        try {
+          queueWSIA = QueueUtil.getBest(context, "WSIA");
+        } catch (java.io.IOException ex) {
+          System.out.println("+ ERROR: WSIA queue startup exception: " + ex.toString());
+        }
+    
+        if ((queue == null) || (queueCallback == null) || (queueWSIA == null)) {
             System.out.println("+ WARNING: IA queue service(s) NOT started");
             return;
         }
@@ -206,6 +226,13 @@ public class StartupWildbook implements ServletContextListener {
             System.out.println("+ StartupWildbook.startIAQueues() queueCallback.consume() started on " + queueCallback.toString());
         } catch (java.io.IOException iox) {
             System.out.println("+ StartupWildbook.startIAQueues() queueCallback.consume() FAILED on " + queueCallback.toString() + ": " + iox.toString());
+        }
+        WSIAMessageHandler qh3 = new WSIAMessageHandler();
+        try {
+            queueWSIA.consume(qh3);
+            System.out.println("+ StartupWildbook.startIAQueues() queueWSIA.consume() started on " + queueWSIA.toString());
+        } catch (java.io.IOException iox) {
+            System.out.println("+ StartupWildbook.startIAQueues() queueWSIA.consume() FAILED on " + queueWSIA.toString() + ": " + iox.toString());
         }
     }
 
