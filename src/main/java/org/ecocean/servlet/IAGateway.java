@@ -71,6 +71,7 @@ public class IAGateway extends HttpServlet {
 
     private static Queue IAQueue = null;
     private static Queue IACallbackQueue = null;
+    private static Queue WSIAQueue = null;
 
   public void init(ServletConfig config) throws ServletException {
     super.init(config);
@@ -84,6 +85,24 @@ public class IAGateway extends HttpServlet {
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     response.setHeader("Access-Control-Allow-Origin", "*");  //allow us stuff from localhost
     String qstr = request.getQueryString();
+    System.out.println("[INFO] GET query string is: " + qstr);
+    
+    
+    // temporary call to trigger index creation process. Is until I work out how to
+    // do cron jobs in java / wildbook 
+    if ((qstr != null) && (qstr.matches(".*\\bstartcreateindex\\b.*"))) {
+      String context = ServletUtilities.getContext(request);
+      JSONObject rtn = new JSONObject();
+      JSONObject msg = new JSONObject();
+      msg.put("action", "Please initiate index creation");
+      msg.put("context", context);
+      rtn.put("success", addToWSIAQueue(context, msg.toString()));
+      response.setContentType("text/plain");
+      PrintWriter out = response.getWriter();
+      out.println(rtn.toString());
+      out.close();
+      return;
+    }
 
     //duplicated in both doGet and doPost
     if ((qstr != null) && (qstr.matches(".*\\bcallback\\b.*"))) {
@@ -1216,6 +1235,18 @@ System.out.println("IAGateway.addToQueue() publishing: " + content);
         getIAQueue(context).publish(content);
         return true;
     }
+    
+    public static boolean addToWSIAQueue(String context, String content) throws IOException {
+System.out.println("IAGateway.addToWSIAQueue() publishing: " + content);
+        getWSIAQueue(context).publish(content);
+        return true;
+    }
+    
+    public static Queue getWSIAQueue(String context) throws IOException {
+//      if (WSIAQueue != null) return IAQueue;
+      WSIAQueue = QueueUtil.getBest(context, "WSIA");
+      return WSIAQueue;
+  }
 
     public static Queue getIAQueue(String context) throws IOException {
         if (IAQueue != null) return IAQueue;
@@ -1227,6 +1258,38 @@ System.out.println("IAGateway.addToQueue() publishing: " + content);
         if (IACallbackQueue != null) return IACallbackQueue;
         IACallbackQueue = QueueUtil.getBest(context, "IACallback");
         return IACallbackQueue;
+    }
+    
+    
+    public static void processWSIAQueueMessage(String message) {
+      if (message == null) return;
+      System.out.println("INFO: IAGateway: processWSIAQueueMessage() got message: " + message);
+      JSONObject jobj = null;
+      try {
+          jobj = new JSONObject(message);
+      } catch (org.json.JSONException jex) {
+          System.out.println("WARNING: IAGateway.processWSIAQueueMessage() failed to parse json from '" + message + "' - " + jex.toString());
+          return;
+      }
+      String context = jobj.optString("context", null);
+      if (context == null) {
+        System.out.println("WARNING: IAGateway:processWSIAQueueMessage() no context.");
+        return;
+      }
+      String action = jobj.optString("action","Please initiate index creation");
+      if (action.equals("Please initiate index creation")) {
+        try {
+          org.ecocean.wsiaPackage.WSIA.initiateIndexCreation(context);
+        } catch (InvalidKeyException | NoSuchAlgorithmException
+            | RuntimeException | IOException e) {
+          // TODO Auto-generated catch block
+          System.out.println("WARNING: IAGateway: processWSIAQueueMessage(): initiateIndexCreation() threw some kind of exception:");
+          e.printStackTrace();
+        }
+        return;
+      }
+      System.out.println("WARNING: IAGateway: processWSIAQueueMessage() unrecognised action " + action);
+      return;
     }
 
 
